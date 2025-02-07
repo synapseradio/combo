@@ -1,0 +1,36 @@
+{
+  "name": "combo",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A parser combinator library designed to be simple to use",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "check": "biome check --write",
+    "dev": "rslib build --watch",
+    "format": "biome format --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@rslib/core": "^0.4.0",
+    "@types/node": "^22.8.1",
+    "typescript": "^5.7.3"
+  },
+  "private": true,
+  "trustedDependencies": [
+    "@biomejs/biome",
+    "core-js"
+  ]
+}
