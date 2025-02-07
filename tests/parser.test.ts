@@ -46,10 +46,10 @@ describe('Recursive Combinators', () => {
 });
 
 test('char parser without explicit index', () => {
-  expect(char('a')('abc')).toMatchObject({ 
-    success: true, 
+  expect(char('a')('abc')).toMatchObject({
+    success: true,
     value: 'a',
-    index: 1
+    index: 1,
   });
 });
 
@@ -57,6 +57,6 @@ test('string parser with default index', () => {
   expect(string('hello')('hello world')).toMatchObject({
     success: true,
     value: 'hello',
-    index: 5
+    index: 5,
   });
 });
