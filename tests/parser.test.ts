@@ -1,5 +1,18 @@
 import { describe, expect, test } from 'bun:test';
-import { alt, char, many, optional, seq, string } from '../src';
+import {
+  after,
+  alt,
+  anyChar,
+  between,
+  char,
+  except,
+  many,
+  not,
+  optional,
+  seq,
+  string,
+  whitespace,
+} from '../src';
 
 describe('Core Parsers', () => {
   test('char parser', () => {
@@ -58,5 +71,52 @@ test('string parser with default index', () => {
     success: true,
     value: 'hello',
     index: 5,
+  });
+});
+
+describe('Convenience Combinators', () => {
+  test('between wraps content', () => {
+    const p = between(char('('), char(')'))(many(char('1')));
+    expect(p('(111)')).toMatchObject({ value: ['1', '1', '1'] });
+  });
+
+  test('after skips prefix', () => {
+    const p = after(string('data:'))(many(char('h')));
+    expect(p('data:hhh')).toMatchObject({ value: ['h', 'h', 'h'] });
+  });
+
+  test('until stops at marker', () => {
+    const p = until(string('*/'))(anyChar);
+    expect(p('abc*/def')).toMatchObject({
+      value: ['a', 'b', 'c'],
+      index: 3,
+    });
+  });
+
+  test('not succeeds when parser fails', () => {
+    const p = not(char('a'));
+    expect(p('b')).toMatchObject({ success: true });
+    expect(p('a')).toMatchObject({ success: false });
+  });
+
+  test('except fails when parser succeeds', () => {
+    const p = except(char('a'))(char('b'));
+    expect(p('b')).toMatchObject({ success: true });
+    expect(p('a')).toMatchObject({ success: false });
+  });
+});
+
+describe('Utility Parsers', () => {
+  test('anyChar matches any character', () => {
+    expect(anyChar('a')).toMatchObject({ success: true, value: 'a' });
+    expect(anyChar('')).toMatchObject({ success: false });
+  });
+
+  test('whitespace matches whitespace characters', () => {
+    expect(whitespace()(' ')).toMatchObject({ success: true, value: ' ' });
+    expect(whitespace()('\t')).toMatchObject({ success: true, value: '\t' });
+    expect(whitespace()('\n')).toMatchObject({ success: true, value: '\n' });
+    expect(whitespace()('\r')).toMatchObject({ success: true, value: '\r' });
+    expect(whitespace()('a')).toMatchObject({ success: false });
   });
 });

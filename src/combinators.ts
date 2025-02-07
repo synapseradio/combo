@@ -1,6 +1,5 @@
 import type { Parser } from './-types';
 
-// for these parsers, if index is not provided, default it to zero. AI!
 /**
  * Matches a single specific character. Basic building block for token recognition.
  * @example
@@ -130,6 +129,110 @@ export const many =
  */
 export const optional = <T>(parser: Parser<T>): Parser<T | undefined> =>
   alt(parser, succeed(undefined));
+
+/**
+ * Wraps a parser between start and end markers
+ * @example
+ * const quoted = between(char('"'), char('"'))(many(anyChar));
+ */
+export const between =
+  (left: Parser<unknown>, right: Parser<unknown>) =>
+  <T>(parser: Parser<T>): Parser<T> =>
+    map(seq(left, parser, right), ([, value]) => value);
+
+/**
+ * Parses content after a prefix, ignoring the prefix
+ * @example
+ * const value = after(string('data:'))(jsonValue);
+ */
+export const after =
+  (prefix: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T> =>
+    map(seq(prefix, parser), ([, value]) => value);
+
+/**
+ * Parses content until a stop condition is met
+ * @example
+ * const commentContent = until(string('*/'))(anyChar);
+ */
+export const until =
+  (stop: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T[]> => {
+    const untilParser: Parser<T[]> = (input, index = 0) => {
+      const results: T[] = [];
+      let currentIndex = index;
+
+      while (true) {
+        const stopResult = stop(input, currentIndex);
+        if (stopResult.success) break;
+
+        const result = parser(input, currentIndex);
+        if (!result.success) return result;
+
+        results.push(result.value);
+        currentIndex = result.index;
+      }
+
+      return { success: true, value: results, index: currentIndex };
+    };
+
+    return untilParser;
+  };
+
+/**
+ * Succeeds if the parser would fail (zero-width)
+ * @example
+ * const notDigit = not(digit());
+ */
+export const not =
+  (parser: Parser<unknown>): Parser<null> =>
+  (input, index = 0) => {
+    const result = parser(input, index);
+    return result.success
+      ? { success: false, expected: `not ${result.expected}`, index }
+      : { success: true, value: null, index };
+  };
+
+/**
+ * Fails if the exclusion parser matches
+ * @example
+ * const nonEmptyList = except(fail('empty'))(listParser);
+ */
+export const except =
+  (exclusion: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T> =>
+  (input, index = 0) => {
+    const excludeResult = exclusion(input, index);
+    if (excludeResult.success) {
+      return {
+        success: false,
+        expected: `not ${excludeResult.expected}`,
+        index,
+      };
+    }
+    return parser(input, index);
+  };
+
+/**
+ * Matches any single character (fails at EOF)
+ */
+export const anyChar: Parser<string> = (input, index = 0) =>
+  index < input.length
+    ? { success: true, value: input[index], index: index + 1 }
+    : { success: false, expected: 'any character', index };
+
+/**
+ * Skips zero or more whitespace characters
+ */
+export const whitespace = (): Parser<string> => (input, index = 0) => {
+  const char = input[index];
+  if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
+    return { success: true, value: char, index: index + 1 };
+  }
+  return { success: false, expected: 'whitespace', index };
+};
+
+/**
+ * Skips zero or more whitespace characters
+ */
+export const whitespaces: Parser<void> = map(many(whitespace()), () => undefined);
 
 // Intuitive aliases
 export const either = alt;
