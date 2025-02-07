@@ -18,13 +18,16 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "check": "biome check --write",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
     "dev": "rslib build --watch",
-    "format": "biome format --write"
+    "types:check": "tsc --noEmit",
+    "test:changed": "git diff --name-only master... | grep -E 'src/.*\\.ts$|tests/.*\\.test\\.ts$' | sed 's|src/|\0|; s|\\.ts$|.test.ts|' | xargs -r bun test"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@rslib/core": "^0.4.0",
+    "@types/bun": "^1.2.2",
     "@types/node": "^22.8.1",
     "typescript": "^5.7.3"
   },
