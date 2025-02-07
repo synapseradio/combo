@@ -161,7 +161,7 @@ export const after =
 /**
  * Parses content until a stop condition is met
  * @example
- * const commentContent = until(string('*/'))(anyChar); // Fixed escape
+ * const commentContent = until(string('*\\/'))(anyChar); // Fixed escape
  */
 export const until =
   (stop: Parser<unknown>) =>
