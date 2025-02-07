@@ -161,7 +161,13 @@ export const after =
 /**
  * Parses content until a stop condition is met
  * @example
- * const commentContent = until(string('*'))(anyChar);
+ * // Parse list items until closing bracket
+ * const listParser = between(
+ *   char('['),
+ *   char(']')
+ * )(until(char(']'))(many(letter())));
+ *
+ * listParser('[abc]def') // => { value: ['a','b','c'], index: 4 }
  */
 export const until =
   (stop: Parser<unknown>) =>
