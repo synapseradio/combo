@@ -6,15 +6,15 @@ import {
   between,
   char,
   except,
+  letter,
   many,
   not,
   optional,
   seq,
   string,
+  until,
   whitespace,
   whitespaces,
-  letter,
-  until,
 } from '../src';
 
 describe('Core Parsers', () => {
