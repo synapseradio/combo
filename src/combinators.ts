@@ -1,4 +1,4 @@
-import type { Parser } from "./-types";
+import type { Parser } from './-types';
 
 /**
  * Matches a single specific character. Basic building block for token recognition.
@@ -6,10 +6,12 @@ import type { Parser } from "./-types";
  * const parseA = char('a');
  * parseA('apple', 0) // => { success: true, value: 'a', index: 1 }
  */
-export const char = (c: string): Parser<string> => 
-  (input, index) => input[index] === c 
-    ? { success: true, value: c, index: index + 1 } 
-    : { success: false, expected: `'${c}'`, index };
+export const char =
+  (c: string): Parser<string> =>
+  (input, index) =>
+    input[index] === c
+      ? { success: true, value: c, index: index + 1 }
+      : { success: false, expected: `'${c}'`, index };
 
 /**
  * Matches an exact string sequence. Essential for keyword recognition.
@@ -17,10 +19,12 @@ export const char = (c: string): Parser<string> =>
  * const parseHello = string('hello');
  * parseHello('hello world', 0) // => { success: true, value: 'hello', index: 5 }
  */
-export const string = (s: string): Parser<string> => 
-  (input, index) => input.startsWith(s, index) 
-    ? { success: true, value: s, index: index + s.length } 
-    : { success: false, expected: `'${s}'`, index };
+export const string =
+  (s: string): Parser<string> =>
+  (input, index) =>
+    input.startsWith(s, index)
+      ? { success: true, value: s, index: index + s.length }
+      : { success: false, expected: `'${s}'`, index };
 
 /**
  * Always succeeds with provided value, consumes no input. Useful for default values.
@@ -28,7 +32,8 @@ export const string = (s: string): Parser<string> =>
  * const answer = succeed(42);
  * answer('any input', 0) // => { success: true, value: 42, index: 0 }
  */
-export const succeed = <T>(value: T): Parser<T> => 
+export const succeed =
+  <T>(value: T): Parser<T> =>
   (_, index) => ({ success: true, value, index });
 
 /**
@@ -37,7 +42,8 @@ export const succeed = <T>(value: T): Parser<T> =>
  * const failNum = fail<number>('number');
  * failNum('abc', 0) // => { success: false, expected: 'number', index: 0 }
  */
-export const fail = <T>(expected: string): Parser<T> => 
+export const fail =
+  <T>(expected: string): Parser<T> =>
   (_, index) => ({ success: false, expected, index });
 
 /**
