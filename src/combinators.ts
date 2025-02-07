@@ -4,8 +4,7 @@ import type { Parser } from './-types';
 /**
  * Matches a single specific character. Basic building block for token recognition.
  * @example
- * const parseA = char('a');
- * parseA('apple', 0) // => { success: true, value: 'a', index: 1 }
+ * const parseA = char('apple', 0); // => { success: true, value: 'a', index: 1 }
  */
 export const char =
   (c: string): Parser<string> =>
@@ -131,3 +130,9 @@ export const many =
  */
 export const optional = <T>(parser: Parser<T>): Parser<T | undefined> =>
   alt(parser, succeed(undefined));
+
+// Intuitive aliases
+export const either = alt;
+export const sequence = seq;
+export const maybe = optional;
+export const zeroOrMore = many;
