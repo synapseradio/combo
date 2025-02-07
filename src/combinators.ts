@@ -15,7 +15,7 @@ export const alt =
 export const seq =
   <T extends any[]>(...parsers: { [K in keyof T]: Parser<T[K]> }): Parser<T> =>
   (input, index) => {
-    const values: any[] = [];
+    const values: { [K in keyof T]: T[K] } = [] as any; // Assertion needed here
     let currentIndex = index;
 
     for (const parser of parsers) {
