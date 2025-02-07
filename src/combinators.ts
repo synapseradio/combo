@@ -161,7 +161,7 @@ export const after =
 /**
  * Parses content until a stop condition is met
  * @example
- * const commentContent = until(string('*\\/'))(anyChar); // Fixed escape
+ * const commentContent = until(string('*'))(anyChar); 
  */
 export const until =
   (stop: Parser<unknown>) =>
@@ -249,6 +249,14 @@ export const whitespaces: Parser<void> = map(
   many(whitespace()),
   () => undefined,
 );
+
+/**
+ * Matches any English letter (a-z, A-Z)
+ * @example
+ * letter()('apple') // => 'a'
+ */
+export const letter = (): Parser<string> => 
+  char.match(/[a-zA-Z]/);
 
 // Intuitive aliases
 export const either = alt;

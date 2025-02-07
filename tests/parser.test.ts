@@ -13,6 +13,8 @@ import {
   string,
   whitespace,
   whitespaces,
+  letter,
+  until,
 } from '../src';
 
 describe('Core Parsers', () => {
@@ -150,7 +152,7 @@ describe('Utility Parsers', () => {
 
   test('whitespaces skips multiple whitespace', () => {
     const p = whitespaces;
-    expect(p('   \t')).toMatchObject({
+    expect(p('   \t\n')).toMatchObject({
       success: true,
       index: 4,
     });
