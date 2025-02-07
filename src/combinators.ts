@@ -146,7 +146,8 @@ export const between =
  * const value = after(string('data:'))(jsonValue);
  */
 export const after =
-  (prefix: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T> =>
+  (prefix: Parser<unknown>) =>
+  <T>(parser: Parser<T>): Parser<T> =>
     map(seq(prefix, parser), ([, value]) => value);
 
 /**
@@ -155,7 +156,8 @@ export const after =
  * const commentContent = until(string('*\u002f'))(anyChar);
  */
 export const until =
-  (stop: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T[]> => {
+  (stop: Parser<unknown>) =>
+  <T>(parser: Parser<T>): Parser<T[]> => {
     const untilParser: Parser<T[]> = (input, index = 0) => {
       const results: T[] = [];
       let currentIndex = index;
@@ -197,7 +199,8 @@ export const not =
  * const nonEmptyList = except(fail('empty'))(listParser);
  */
 export const except =
-  (exclusion: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T> =>
+  (exclusion: Parser<unknown>) =>
+  <T>(parser: Parser<T>): Parser<T> =>
   (input, index = 0) => {
     const excludeResult = exclusion(input, index);
     if (excludeResult.success) {
@@ -221,18 +224,23 @@ export const anyChar: Parser<string> = (input, index = 0) =>
 /**
  * Skips zero or more whitespace characters
  */
-export const whitespace = (): Parser<string> => (input, index = 0) => {
-  const char = input[index];
-  if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
-    return { success: true, value: char, index: index + 1 };
-  }
-  return { success: false, expected: 'whitespace', index };
-};
+export const whitespace =
+  (): Parser<string> =>
+  (input, index = 0) => {
+    const char = input[index];
+    if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
+      return { success: true, value: char, index: index + 1 };
+    }
+    return { success: false, expected: 'whitespace', index };
+  };
 
 /**
  * Skips zero or more whitespace characters
  */
-export const whitespaces: Parser<void> = map(many(whitespace()), () => undefined);
+export const whitespaces: Parser<void> = map(
+  many(whitespace()),
+  () => undefined,
+);
 
 // Intuitive aliases
 export const either = alt;
