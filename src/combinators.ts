@@ -13,9 +13,9 @@ export const alt =
 
 // Iterative sequence combinator
 export const seq =
-  <T extends any[]>(...parsers: { [K in keyof T]: Parser<T[K]> }): Parser<T> =>
+  <T extends unknown[]>(...parsers: { [K in keyof T]: Parser<T[K]> }): Parser<T> =>
   (input, index) => {
-    const values: { [K in keyof T]: T[K] } = [] as any; // Assertion needed here
+    const values: { [K in keyof T]: T[K] } = [] as { [K in keyof T]: T[K] };
     let currentIndex = index;
 
     for (const parser of parsers) {
