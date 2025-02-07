@@ -161,7 +161,7 @@ export const after =
 /**
  * Parses content until a stop condition is met
  * @example
- * const commentContent = until(string('*\\/'))(anyChar); // Removed Unicode escape
+ * const commentContent = until(string('*/'))(anyChar); // Fixed escape
  */
 export const until =
   (stop: Parser<unknown>) =>
@@ -189,22 +189,22 @@ export const until =
 
 /**
  * Succeeds if the parser would fail (zero-width)
- * @example
- * const notDigit = not(digit());
  */
 export const not =
   (parser: Parser<unknown>): Parser<null> =>
   (input, index = 0) => {
     const result = parser(input, index);
     return result.success
-      ? { success: false, expected: [`not ${result.expected}`], index }
+      ? {
+          success: false,
+          expected: [`not ${result.expected.join(' or ')}`], // Join array to string
+          index,
+        }
       : { success: true, value: null, index };
   };
 
 /**
  * Fails if the exclusion parser matches
- * @example
- * const nonEmptyList = except(fail('empty'))(listParser);
  */
 export const except =
   (exclusion: Parser<unknown>) =>
@@ -214,7 +214,7 @@ export const except =
     if (excludeResult.success) {
       return {
         success: false,
-        expected: [`not ${excludeResult.expected}`],
+        expected: [`not ${excludeResult.expected.join(' or ')}`], // Join array
         index,
       };
     }
