@@ -34,3 +34,21 @@ export const map = <T, U>(parser: Parser<T>, fn: (value: T) => U): Parser<U> =>
       ? { ...result, value: fn(result.value) } 
       : result;
   };
+
+export const many = <T>(parser: Parser<T>): Parser<T[]> => 
+  (input, index) => {
+    const values: T[] = [];
+    let currentIndex = index;
+    
+    while (true) {
+      const result = parser(input, currentIndex);
+      if (!result.success) break;
+      values.push(result.value);
+      currentIndex = result.index;
+    }
+    
+    return { success: true, value: values, index: currentIndex };
+  };
+
+export const optional = <T>(parser: Parser<T>): Parser<T | undefined> => 
+  alt(parser, succeed(undefined));

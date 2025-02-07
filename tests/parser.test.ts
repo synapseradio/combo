@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { char, string, alt, seq } from "../src";
+import { char, string, alt, seq, many, optional } from "../src";
 
 describe("Core Parsers", () => {
   test("char parser", () => {
@@ -25,5 +25,22 @@ describe("Combinators", () => {
   test("seq combines parsers sequentially", () => {
     const parser = seq(char("a"), char("b"));
     expect(parser("abc", 0)).toMatchObject({ value: ["a", "b"] });
+  });
+});
+
+describe("Recursive Combinators", () => {
+  test("many combinator", () => {
+    const p = many(char("a"));
+    expect(p("aaab", 0)).toMatchObject({
+      success: true,
+      value: ["a", "a", "a"]
+    });
+    expect(p("baaa", 0)).toMatchObject({ success: true, value: [], index: 0 });
+  });
+
+  test("optional combinator", () => {
+    const p = seq(optional(char("a")), char("b"));
+    expect(p("ab", 0)).toMatchObject({ value: ["a", "b"] });
+    expect(p("b", 0)).toMatchObject({ value: [undefined, "b"] });
   });
 });
