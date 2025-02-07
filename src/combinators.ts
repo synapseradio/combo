@@ -152,7 +152,7 @@ export const after =
 /**
  * Parses content until a stop condition is met
  * @example
- * const commentContent = until(string('*/'))(anyChar);
+ * const commentContent = until(string('*\u002f'))(anyChar);
  */
 export const until =
   (stop: Parser<unknown>) => <T>(parser: Parser<T>): Parser<T[]> => {
