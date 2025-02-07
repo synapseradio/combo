@@ -12,18 +12,23 @@ import {
   seq,
   string,
   whitespace,
+  whitespaces,
 } from '../src';
 
 describe('Core Parsers', () => {
   test('char parser', () => {
     expect(char('a')('abc', 0)).toMatchObject({ success: true, value: 'a' });
-    expect(char('a')('bac', 0)).toMatchObject({ success: false });
+    expect(char('a')('bac', 0)).toMatchObject({ success: false, expected: ["'a'"] });
   });
 
   test('string parser', () => {
     expect(string('hello')('hello world', 0)).toMatchObject({
       success: true,
       value: 'hello',
+    });
+    expect(string('hello')('hi world', 0)).toMatchObject({
+      success: false,
+      expected: ["'hello'"]
     });
   });
 });
@@ -33,11 +38,13 @@ describe('Combinators', () => {
     const parser = alt(char('a'), char('b'));
     expect(parser('abc', 0)).toMatchObject({ value: 'a' });
     expect(parser('bac', 0)).toMatchObject({ value: 'b' });
+    expect(parser('cab', 0)).toMatchObject({ success: false, expected: ["'a'", "'b'"] });
   });
 
   test('seq combines parsers sequentially', () => {
     const parser = seq(char('a'), char('b'));
     expect(parser('abc', 0)).toMatchObject({ value: ['a', 'b'] });
+    expect(parser('acb', 0)).toMatchObject({ success: false, expected: ["'b'"] });
   });
 });
 
@@ -96,20 +103,20 @@ describe('Convenience Combinators', () => {
   test('not succeeds when parser fails', () => {
     const p = not(char('a'));
     expect(p('b')).toMatchObject({ success: true });
-    expect(p('a')).toMatchObject({ success: false });
+    expect(p('a')).toMatchObject({ success: false, expected: ["not [object Object]"] });
   });
 
   test('except fails when parser succeeds', () => {
     const p = except(char('a'))(char('b'));
     expect(p('b')).toMatchObject({ success: true });
-    expect(p('a')).toMatchObject({ success: false });
+    expect(p('a')).toMatchObject({ success: false, expected: ["not [object Object]"] });
   });
 });
 
 describe('Utility Parsers', () => {
   test('anyChar matches any character', () => {
     expect(anyChar('a')).toMatchObject({ success: true, value: 'a' });
-    expect(anyChar('')).toMatchObject({ success: false });
+    expect(anyChar('')).toMatchObject({ success: false, expected: ["any character"] });
   });
 
   test('whitespace matches whitespace characters', () => {
@@ -117,6 +124,18 @@ describe('Utility Parsers', () => {
     expect(whitespace()('\t')).toMatchObject({ success: true, value: '\t' });
     expect(whitespace()('\n')).toMatchObject({ success: true, value: '\n' });
     expect(whitespace()('\r')).toMatchObject({ success: true, value: '\r' });
-    expect(whitespace()('a')).toMatchObject({ success: false });
+    expect(whitespace()('a')).toMatchObject({ success: false, expected: ["whitespace"] });
+  });
+
+  test('whitespaces skips multiple whitespace', () => {
+    const p = whitespaces;
+    expect(p('   \t\n')).toMatchObject({ 
+      success: true, 
+      index: 4 
+    });
+    expect(p('hello')).toMatchObject({
+      success: true,
+      index: 0
+    });
   });
 });

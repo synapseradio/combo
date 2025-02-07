@@ -10,7 +10,7 @@ export const char =
   (input, index = 0) =>
     input[index] === c
       ? { success: true, value: c, index: index + 1 }
-      : { success: false, expected: `'${c}'`, index };
+      : { success: false, expected: [`'${c}'`], index };
 
 /**
  * Matches an exact string sequence. Essential for keyword recognition.
@@ -23,7 +23,7 @@ export const string =
   (input, index = 0) =>
     input.startsWith(s, index)
       ? { success: true, value: s, index: index + s.length }
-      : { success: false, expected: `'${s}'`, index };
+      : { success: false, expected: [`'${s}'`], index };
 
 /**
  * Always succeeds with provided value, consumes no input. Useful for default values.
@@ -43,7 +43,7 @@ export const succeed =
  */
 export const fail =
   <T>(expected: string): Parser<T> =>
-  (_, index = 0) => ({ success: false, expected, index });
+  (_, index = 0) => ({ success: false, expected: [expected], index });
 
 /**
  * Tries multiple parsers in order, returning first success. Enables alternative patterns.
@@ -54,11 +54,19 @@ export const fail =
 export const alt =
   <T>(...parsers: Parser<T>[]): Parser<T> =>
   (input, index = 0) => {
+    const errors: string[] = [];
+
     for (const parser of parsers) {
       const result = parser(input, index);
       if (result.success) return result;
+      if (!result.success) errors.push(...result.expected);
     }
-    return { success: false, expected: 'any matching alternative', index };
+
+    return {
+      success: false,
+      expected: [...new Set(errors)], // Unique errors
+      index,
+    };
   };
 
 /**
@@ -153,7 +161,7 @@ export const after =
 /**
  * Parses content until a stop condition is met
  * @example
- * const commentContent = until(string('*\u002f'))(anyChar);
+ * const commentContent = until(string('*/'))(anyChar); // Removed Unicode escape
  */
 export const until =
   (stop: Parser<unknown>) =>
@@ -189,7 +197,7 @@ export const not =
   (input, index = 0) => {
     const result = parser(input, index);
     return result.success
-      ? { success: false, expected: `not ${result.expected}`, index }
+      ? { success: false, expected: [`not ${result.expected}`], index }
       : { success: true, value: null, index };
   };
 
@@ -206,7 +214,7 @@ export const except =
     if (excludeResult.success) {
       return {
         success: false,
-        expected: `not ${excludeResult.expected}`,
+        expected: [`not ${excludeResult.expected}`],
         index,
       };
     }
@@ -219,7 +227,7 @@ export const except =
 export const anyChar: Parser<string> = (input, index = 0) =>
   index < input.length
     ? { success: true, value: input[index], index: index + 1 }
-    : { success: false, expected: 'any character', index };
+    : { success: false, expected: ['any character'], index };
 
 /**
  * Skips zero or more whitespace characters
@@ -231,7 +239,7 @@ export const whitespace =
     if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
       return { success: true, value: char, index: index + 1 };
     }
-    return { success: false, expected: 'whitespace', index };
+    return { success: false, expected: ['whitespace'], index };
   };
 
 /**
