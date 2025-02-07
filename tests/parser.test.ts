@@ -44,3 +44,19 @@ describe('Recursive Combinators', () => {
     expect(p('b', 0)).toMatchObject({ value: [undefined, 'b'] });
   });
 });
+
+test('char parser without explicit index', () => {
+  expect(char('a')('abc')).toMatchObject({ 
+    success: true, 
+    value: 'a',
+    index: 1
+  });
+});
+
+test('string parser with default index', () => {
+  expect(string('hello')('hello world')).toMatchObject({
+    success: true,
+    value: 'hello',
+    index: 5
+  });
+});

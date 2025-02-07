@@ -1,5 +1,6 @@
 import type { Parser } from './-types';
 
+// for these parsers, if index is not provided, default it to zero. AI!
 /**
  * Matches a single specific character. Basic building block for token recognition.
  * @example
@@ -8,7 +9,7 @@ import type { Parser } from './-types';
  */
 export const char =
   (c: string): Parser<string> =>
-  (input, index) =>
+  (input, index = 0) =>
     input[index] === c
       ? { success: true, value: c, index: index + 1 }
       : { success: false, expected: `'${c}'`, index };
@@ -21,7 +22,7 @@ export const char =
  */
 export const string =
   (s: string): Parser<string> =>
-  (input, index) =>
+  (input, index = 0) =>
     input.startsWith(s, index)
       ? { success: true, value: s, index: index + s.length }
       : { success: false, expected: `'${s}'`, index };
@@ -34,7 +35,7 @@ export const string =
  */
 export const succeed =
   <T>(value: T): Parser<T> =>
-  (_, index) => ({ success: true, value, index });
+  (_, index = 0) => ({ success: true, value, index });
 
 /**
  * Always fails with specified expectation. Used for expected error reporting.
@@ -44,7 +45,7 @@ export const succeed =
  */
 export const fail =
   <T>(expected: string): Parser<T> =>
-  (_, index) => ({ success: false, expected, index });
+  (_, index = 0) => ({ success: false, expected, index });
 
 /**
  * Tries multiple parsers in order, returning first success. Enables alternative patterns.
@@ -54,7 +55,7 @@ export const fail =
  */
 export const alt =
   <T>(...parsers: Parser<T>[]): Parser<T> =>
-  (input, index) => {
+  (input, index = 0) => {
     for (const parser of parsers) {
       const result = parser(input, index);
       if (result.success) return result;
@@ -72,7 +73,7 @@ export const seq =
   <T extends unknown[]>(
     ...parsers: { [K in keyof T]: Parser<T[K]> }
   ): Parser<T> =>
-  (input, index) => {
+  (input, index = 0) => {
     const values: { [K in keyof T]: T[K] } = [] as { [K in keyof T]: T[K] };
     let currentIndex = index;
 
@@ -94,7 +95,7 @@ export const seq =
  */
 export const map =
   <T, U>(parser: Parser<T>, fn: (value: T) => U): Parser<U> =>
-  (input, index) => {
+  (input, index = 0) => {
     const result = parser(input, index);
     return result.success ? { ...result, value: fn(result.value) } : result;
   };
@@ -107,7 +108,7 @@ export const map =
  */
 export const many =
   <T>(parser: Parser<T>): Parser<T[]> =>
-  (input, index) => {
+  (input, index = 0) => {
     const values: T[] = [];
     let currentIndex = index;
 
