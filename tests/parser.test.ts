@@ -114,7 +114,7 @@ describe('Convenience Combinators', () => {
     expect(p('b')).toMatchObject({ success: true });
     expect(p('a')).toMatchObject({
       success: false,
-      expected: ['not \'a\''],
+      expected: ["not 'a'"],
     });
   });
 
@@ -123,7 +123,7 @@ describe('Convenience Combinators', () => {
     expect(p('b')).toMatchObject({ success: true });
     expect(p('a')).toMatchObject({
       success: false,
-      expected: ['not \'a\''],
+      expected: ["not 'a'"],
     });
   });
 });
