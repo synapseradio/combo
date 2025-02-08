@@ -445,14 +445,19 @@ export const token = <T>(parser: Parser<T>): Parser<T> =>
 
 type AndThenChain<T, R extends Parser<unknown>[]> = R extends []
   ? []
-  : R extends [(value: T) => Parser<infer U>, ...infer Rest extends ((value: unknown) => Parser<unknown>)[]]
+  : R extends [
+        (value: T) => Parser<infer U>,
+        ...infer Rest extends ((value: unknown) => Parser<unknown>)[],
+      ]
     ? [(value: T) => Parser<U>, ...AndThenChain<U, Rest>]
     : never;
 
 export function andThen<T0, R extends Parser<unknown>[]>(
   parser: Parser<T0>,
   ...fns: AndThenChain<T0, R>
-): Parser<R extends [] ? T0 : (R extends [(value: T0) => Parser<infer U>] ? U : unknown)>;
+): Parser<
+  R extends [] ? T0 : R extends [(value: T0) => Parser<infer U>] ? U : unknown
+>;
 export function andThen(
   parser: Parser<unknown>,
   ...fns: ((value: unknown) => Parser<unknown>)[]
