@@ -445,21 +445,23 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
+type InferParserType<P extends Parser<any>> = P extends Parser<infer T> ? T : never;
+
 type AndThenChain<
   T,
-  Fns extends ((value: any) => Parser<any>)[],
-> = Fns extends [infer First, ...infer Rest]
+  Fns extends ((value: T) => Parser<any>)[],
+> = Fns extends [infer First extends (value: T) => Parser<any>, ...infer Rest extends ((value: any) => Parser<any>)[]]
   ? First extends (value: T) => Parser<infer U>
     ? AndThenChain<U, Rest>
     : never
   : T;
 
-export const andThen = <T, Fns extends ((value: any) => Parser<any>)[]>(
+export const andThen = <T, Fns extends ((value: T) => Parser<any>)[]>(
   parser: Parser<T>,
   ...fns: Fns & {
     [K in keyof Fns]: K extends number
       ? Fns[K] extends (value: infer V) => Parser<infer W>
-        ? (value: V) => Parser<W>
+        ? (value: V extends T ? V : T) => Parser<W>
         : never
       : never;
   }
@@ -468,7 +470,7 @@ export const andThen = <T, Fns extends ((value: any) => Parser<any>)[]>(
     (currentParser, fn) => (input: string, index: number) => {
       const result = currentParser(input, index);
       return result.success
-        ? (fn as (value: typeof result.value) => Parser<any>)(result.value)(
+        ? (fn as (value: InferParserType<typeof currentParser>) => Parser<any>)(result.value)(
             input,
             result.index,
           )
