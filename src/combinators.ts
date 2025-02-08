@@ -517,6 +517,7 @@ export const eof =
  * - `maybe`: Semantic optionality
  * - `zeroOrMore`: Clear repetition intent
  */
+
 export const either = alt;
 export const sequence = seq;
 export const maybe = optional;
