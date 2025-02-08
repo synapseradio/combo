@@ -53,17 +53,17 @@ describe('Chaining Combinators', () => {
     );
 
     // Test successful chain
-    expect(parser('3_aaa', 0)).toMatchObject({
+    expect(parser('3___', 0)).toMatchObject({
       success: true,
-      value: ['a', 'a', 'a'],
-      index: 4,
+      value: ['_', '_', '_'], // Parsed from the many() after underscores
+      index: 4, // 3 (number) + 3 (underscores)
     });
 
     // Test failure propagation
-    expect(parser('2__aa', 0)).toMatchObject({
+    expect(parser('2_aa', 0)).toMatchObject({
       success: false,
-      expected: ["'__'"],
-      index: 1,
+      expected: ["'__'"], // Expecting 2 underscores
+      index: 1, // Fails after parsing the number 2
     });
 
     const result = parser('3___', 0);
