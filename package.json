@@ -2,6 +2,10 @@
   "name": "combo",
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "bun@1.2.2",
+  "engines": {
+    "node": "^22.12.0"
+  },
   "description": "A parser combinator library designed to be simple to use",
   "exports": {
     ".": {
