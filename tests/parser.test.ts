@@ -46,9 +46,52 @@ describe('Core Parsers', () => {
 });
 
 describe('Chaining Combinators', () => {
-  // fill out a comprehensive test for this case. AI!
   test('andThen chains parsers', () => {
-    
+    // Test successful chain
+    const parser = andThen(
+      integer(),
+      (n) => string('_'.repeat(n)), // Chain integer to dynamic string
+      (s) => many(char(s[0])), // Chain string to repeated chars
+    );
+
+    // Test valid input
+    expect(parser('3___', 0)).toMatchObject({
+      success: true,
+      value: ['_', '_', '_'],
+      index: 4, // 1 (for '3') + 3 (for '___')
+    });
+
+    // Test failure in first parser
+    expect(parser('a___', 0)).toMatchObject({
+      success: false,
+      expected: ['integer'], // From integer() parser
+      index: 0,
+    });
+
+    // Test failure in second parser
+    expect(parser('2__', 0)).toMatchObject({
+      success: false,
+      expected: ["'__'"], // From string('__') parser
+      index: 1, // Fails after integer parse
+    });
+
+    // Test type transitions
+    const result = parser('3___', 0);
+    if (result.success) {
+      // Should have correct chained types: number -> string -> string[]
+      // @ts-expect-error - should fail type check
+      const num: number = result.value;
+      // @ts-expect-error - should fail type check
+      const str: string = result.value;
+      const arr: string[] = result.value; // Valid type
+      expect(arr).toEqual(['_', '_', '_']);
+    }
+
+    // Test index positions
+    const stagedCheck = parser('3___abc', 0);
+    if (stagedCheck.success) {
+      expect(stagedCheck.index).toBe(4); // Should stop after parsing underscores
+    }
   });
 
   test('andThen handles empty chain', () => {
