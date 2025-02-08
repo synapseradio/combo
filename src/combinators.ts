@@ -2,12 +2,16 @@ import type { ParseResult, Parser } from './-types';
 
 const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
 
-export const memoize = <T>(parser: Parser<T>): Parser<T> => 
+export const memoize =
+  <T>(parser: Parser<T>): Parser<T> =>
   (input: string, index = 0) => {
     if (!memo.has(parser)) memo.set(parser, new Map());
     const cache = memo.get(parser)!;
-    
-    return cache.get(index) ?? (cache.set(index, parser(input, index)), cache.get(index)!);
+
+    return (
+      cache.get(index) ??
+      (cache.set(index, parser(input, index)), cache.get(index)!)
+    );
   };
 
 /**
@@ -15,14 +19,13 @@ export const memoize = <T>(parser: Parser<T>): Parser<T> =>
  * @example
  * const parseA = char('apple', 0); // => { success: true, value: 'a', index: 1 }
  */
-export const char =
-  (c: string): Parser<string> => {
-    const expected = [`'${c}'`];
-    return (input: string, index = 0) =>
-      input[index] === c
-        ? { success: true, value: c, index: index + 1 }
-        : { success: false, expected, index };
-  };
+export const char = (c: string): Parser<string> => {
+  const expected = [`'${c}'`];
+  return (input: string, index = 0) =>
+    input[index] === c
+      ? { success: true, value: c, index: index + 1 }
+      : { success: false, expected, index };
+};
 
 /**
  * Matches an exact string sequence. Essential for keyword recognition.
@@ -30,16 +33,15 @@ export const char =
  * const parseHello = string('hello');
  * parseHello('hello world', 0) // => { success: true, value: 'hello', index: 5 }
  */
-export const string =
-  (s: string): Parser<string> => {
-    const len = s.length;
-    return (input: string, index = 0) => {
-      if (input.slice(index, index + len) === s) {
-        return { success: true, value: s, index: index + len };
-      }
-      return { success: false, expected: [`'${s}'`], index };
-    };
+export const string = (s: string): Parser<string> => {
+  const len = s.length;
+  return (input: string, index = 0) => {
+    if (input.slice(index, index + len) === s) {
+      return { success: true, value: s, index: index + len };
+    }
+    return { success: false, expected: [`'${s}'`], index };
   };
+};
 
 /**
  * Always succeeds with provided value, consumes no input. Useful for default values.
@@ -149,12 +151,12 @@ export const many = <T>(parser: Parser<T>): Parser<T[]> => {
     const values: T[] = [];
     let currentIndex = index;
     let result: ParseResult<T>;
-    
+
     while ((result = parserFn(input, currentIndex)).success) {
       values.push(result.value);
       currentIndex = result.index;
     }
-    
+
     return { success: true, value: values, index: currentIndex };
   };
 };
@@ -316,13 +318,12 @@ export const whitespace =
 /**
  * Skips zero or more whitespace characters
  */
-export const whitespaces = (): Parser<void> => 
+export const whitespaces =
+  (): Parser<void> =>
   (input: string, index = 0) => {
     let currentIndex = index;
-    while (
-      currentIndex < input.length && 
-      /\s/.test(input[currentIndex])
-    ) currentIndex++;
+    while (currentIndex < input.length && /\s/.test(input[currentIndex]))
+      currentIndex++;
     return { success: true, value: undefined, index: currentIndex };
   };
 
