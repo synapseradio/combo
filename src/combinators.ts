@@ -237,8 +237,8 @@ export const except =
     if (excludeResult.success) {
       return {
         success: false,
-        // fix Property 'expected' does not exist on type '{ success: true; value: unknown; index: number; }'.ts(2339) AI!
-        expected: [`not ${excludeResult.expected.join(' or ')}`],
+        // Use parsed value for error message
+        expected: [`not '${String(excludeResult.value)}'`],
         index,
       };
     }
