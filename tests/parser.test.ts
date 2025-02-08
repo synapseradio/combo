@@ -50,7 +50,7 @@ describe('Chaining Combinators', () => {
     // Test successful chain
     const parser = andThen(
       integer(),
-      (n) => manyN(n, char('_')) // New combinator to parse exactly N times
+      (n) => manyN(n, char('_')), // New combinator to parse exactly N times
     );
 
     // Test valid input
