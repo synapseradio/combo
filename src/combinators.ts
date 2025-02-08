@@ -176,6 +176,20 @@ export const map =
  * const manyA = many(char('a'));
  * manyA('aaabbb', 0) // => { success: true, value: ['a','a','a'], index: 3 }
  */
+export const manyN = <T>(count: number, parser: Parser<T>): Parser<T[]> => {
+  return (input: string, index = 0) => {
+    const values: T[] = [];
+    let currentIndex = index;
+    for (let i = 0; i < count; i++) {
+      const result = parser(input, currentIndex);
+      if (!result.success) return result;
+      values.push(result.value);
+      currentIndex = result.index;
+    }
+    return { success: true, value: values, index: currentIndex };
+  };
+};
+
 export const many = <T>(parser: Parser<T>): Parser<T[]> => {
   const parserFn = parser as (input: string, index: number) => ParseResult<T>;
   return (input: string, index = 0) => {

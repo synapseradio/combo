@@ -50,14 +50,13 @@ describe('Chaining Combinators', () => {
     // Test successful chain
     const parser = andThen(
       integer(),
-      (n) => string('_'.repeat(n)), // Actually use the integer to determine underscore count
-      (s) => many(char(s[0])), // Now s is the underscore string from previous step
+      (n) => manyN(n, char('_')) // New combinator to parse exactly N times
     );
 
     // Test valid input
     expect(parser('3___', 0)).toMatchObject({
       success: true,
-      value: [],
+      value: ['_', '_', '_'], // This is the actual parsed value from the string() parser
       index: 4, // 1 (for '3') + 3 (for '___')
     });
 
