@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+echo "Running pre-push checks with Bun..."
+bun run lint
+bun run types:check
+bun test

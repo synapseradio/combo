@@ -22,7 +22,10 @@
   ],
   "scripts": {
     "build": "rslib build",
+    "commit": "bunx cz",
     "lint": "biome check",
+    "prepare": "bun run init-hooks",
+    "init-hooks": "mkdir -p .git/hooks && cp .githooks/* .git/hooks/ && chmod +x .git/hooks/*",
     "lint:fix": "biome check --write",
     "dev": "rslib build --watch",
     "types:check": "tsc --noEmit",
@@ -32,6 +35,8 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@rslib/core": "^0.4.0",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "@types/bun": "^1.2.2",
     "@types/node": "^22.8.1",
     "typescript": "^5.7.3"
