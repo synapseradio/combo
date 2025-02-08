@@ -12,6 +12,7 @@ import {
   integer,
   letter,
   many,
+  many1,
   not,
   optional,
   sepBy,
@@ -45,34 +46,9 @@ describe('Core Parsers', () => {
 });
 
 describe('Chaining Combinators', () => {
+  // fill out a comprehensive test for this case. AI!
   test('andThen chains parsers', () => {
-    const parser = andThen(
-      integer(),
-      (n) => string('_'.repeat(n)), // Chain integer to dynamic string
-      (s) => many(char(s[0])), // Chain string to repeated chars
-    );
-
-    // Test successful chain
-    expect(parser('3___', 0)).toMatchObject({
-      success: true,
-      value: ['_', '_', '_'], // Parsed from the many() after underscores
-      index: 4, // 3 (number) + 3 (underscores)
-    });
-
-    // Test failure propagation
-    expect(parser('2_aa', 0)).toMatchObject({
-      success: false,
-      expected: ["'__'"], // Expecting 2 underscores
-      index: 1, // Fails after parsing the number 2
-    });
-
-    const result = parser('3___', 0);
-    if (result.success) {
-      // @ts-expect-error - number is not assignable to string[]
-      const num: number = result.value;
-      const arr: string[] = result.value;
-      expect(arr).toEqual(['_', '_', '_']);
-    }
+    
   });
 
   test('andThen handles empty chain', () => {
