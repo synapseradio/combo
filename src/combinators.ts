@@ -445,59 +445,33 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
-type AndThenChain<
-  T,
-  Fns extends ((value: never) => Parser<unknown>)[],
-> = Fns extends [infer First, ...infer Rest]
-  ? First extends (value: T) => Parser<infer U>
-    ? AndThenChain<U, Rest>
-    : never
-  : T;
+type AndThenChain<T, Fns extends ((value: any) => Parser<any>)[]> = 
+  Fns extends [infer First, ...infer Rest]
+    ? First extends (value: T) => Parser<infer U> 
+      ? AndThenChain<U, Rest>
+      : never
+    : T;
 
-/**
- * Variadic chain of dependent parsers with strict type safety
- * @example
- * const parser = andThen(
- *   char('a'),
- *   (a: string) => string(a.toUpperCase()),
- *   (upperA: string) => integer().map(n => upperA.repeat(n))
- * );
- * parser('aA3') // => 'AAA'
- */
-export const andThen = <
-  T,
-  Fns extends [
-    (value: T) => Parser<unknown>,
-    ...Array<(value: unknown) => Parser<unknown>>,
-  ],
->(
+export const andThen = <T, Fns extends ((value: any) => Parser<any>)[]>(
   parser: Parser<T>,
   ...fns: Fns & {
-    [K in keyof Fns]: (
-      value: AndThenChain<T, Take<K, Fns>>,
-    ) => ReturnType<Fns[K]> extends Parser<infer U> ? Parser<U> : never;
+    [K in keyof Fns]: K extends number 
+      ? Fns[K] extends (value: infer V) => Parser<infer W>
+        ? (value: V) => Parser<W>
+        : never
+      : never
   }
 ): Parser<AndThenChain<T, Fns>> => {
-  return fns.reduce(
-    (currentParser, fn) => (input: string, index: number) => {
+  return fns.reduce((currentParser, fn) => 
+    (input: string, index: number) => {
       const result = currentParser(input, index);
-      return result.success
-        ? (fn as (value: typeof result.value) => Parser<unknown>)(result.value)(
-            input,
-            result.index,
-          )
+      return result.success 
+        ? (fn as (value: typeof result.value) => Parser<any>)(result.value)(input, result.index)
         : result;
     },
-    parser,
+    parser
   ) as Parser<AndThenChain<T, Fns>>;
 };
-
-// Helper type for tuple processing
-type Take<K extends PropertyKey, Fns extends unknown[]> = K extends keyof Fns
-  ? Fns[K] extends (value: never) => Parser<infer U>
-    ? U
-    : never
-  : never;
 
 /**
  * Provides fallback error messages
