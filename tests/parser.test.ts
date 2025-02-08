@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   after,
   alt,
+  andThen,
   anyChar,
   between,
   char,
@@ -39,6 +40,62 @@ describe('Core Parsers', () => {
     expect(string('hello')('hi world', 0)).toMatchObject({
       success: false,
       expected: ["'hello'"],
+    });
+  });
+});
+
+describe('Chaining Combinators', () => {
+  test('andThen chains parsers', () => {
+    const parser = andThen(
+      integer(),
+      (n) => string('_'.repeat(n)), // Chain integer to dynamic string
+      (s) => many(char(s[0])) // Chain string to repeated chars
+    );
+
+    // Test successful chain
+    expect(parser('3_aaa', 0)).toMatchObject({
+      success: true,
+      value: ['a', 'a', 'a'],
+      index: 4
+    });
+
+    // Test failure propagation
+    expect(parser('2__aa', 0)).toMatchObject({
+      success: false,
+      expected: ["'__'"],
+      index: 1
+    });
+
+    // Test type inference through chain
+    const result = parser('3___', 0);
+    if (result.success) {
+      // @ts-expect-error - should fail type check (expect number, got string[])
+      const num: number = result.value;
+      // Proper type should be string[]
+      const arr: string[] = result.value; // This should be valid
+    }
+  });
+
+  test('andThen handles empty chain', () => {
+    const parser = andThen(string('test'));
+    expect(parser('test', 0)).toMatchObject({
+      success: true,
+      value: 'test'
+    });
+  });
+
+  test('andThen maintains error positions', () => {
+    const parser = andThen(
+      char('a'),
+      () => char('b'),
+      () => char('c')
+    );
+    
+    const result = parser('abd', 0);
+    expect(result).toMatchObject({
+      success: false,
+      expected: ["'c'"],
+      index: 2
     });
   });
 });
