@@ -69,10 +69,10 @@ describe('Chaining Combinators', () => {
     });
 
     // Test failure in second parser
-    expect(parser('2__', 0)).toMatchObject({
+    expect(parser('2_', 0)).toMatchObject({  // Reduced to 1 underscore
       success: false,
-      expected: ["'__'"], // From string('__') parser
-      index: 1, // Fails after integer parse
+      expected: ["'__'"],   // Expecting 2 underscores
+      index: 1,             // Fails after parsing integer 2
     });
 
     // Test type transitions
