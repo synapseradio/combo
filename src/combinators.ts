@@ -458,7 +458,10 @@ type AndThenChain<
 
 export const andThen = <
   T,
-  Fns extends [(value: T) => Parser<unknown>, ...((value: unknown) => Parser<unknown>)[]],
+  Fns extends [
+    (value: T) => Parser<unknown>,
+    ...((value: unknown) => Parser<unknown>)[],
+  ],
 >(
   parser: Parser<T>,
   ...fns: Fns
