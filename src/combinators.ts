@@ -449,31 +449,33 @@ type InferParserType<P extends Parser<unknown>> = P extends Parser<infer T>
   ? T
   : never;
 
-type AndThenChain<T, Fns extends ((value: any) => Parser<any>)[]> = 
-  Fns extends [infer First, ...infer Rest]
-    ? First extends (value: T) => Parser<infer U> 
-      ? AndThenChain<U, Rest>
-      : never
-    : T;
+type AndThenChain<
+  T,
+  Fns extends ((value: any) => Parser<any>)[],
+> = Fns extends [infer First, ...infer Rest]
+  ? First extends (value: T) => Parser<infer U>
+    ? AndThenChain<U, Rest>
+    : never
+  : T;
 
 export const andThen = <T, Fns extends ((value: T) => Parser<any>)[]>(
   parser: Parser<T>,
   ...fns: Fns & {
-    [K in keyof Fns]: K extends number 
+    [K in keyof Fns]: K extends number
       ? Fns[K] extends (value: infer V) => Parser<infer W>
         ? (value: V) => Parser<W>
         : never
-      : never
+      : never;
   }
 ): Parser<AndThenChain<T, Fns>> => {
-  return fns.reduce((currentParser, fn) => 
-    (input: string, index: number) => {
+  return fns.reduce(
+    (currentParser, fn) => (input: string, index: number) => {
       const result = currentParser(input, index);
-      return result.success 
+      return result.success
         ? (fn as (value: T) => Parser<any>)(result.value)(input, result.index)
         : result;
     },
-    parser
+    parser,
   ) as Parser<AndThenChain<T, Fns>>;
 };
 
