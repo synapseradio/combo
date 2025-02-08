@@ -75,8 +75,7 @@ export const alt =
  * const abParser = seq(char('a'), char('b'));
  * abParser('abc', 0) // => { success: true, value: ['a', 'b'], index: 2 }
  */
-export const seq =
-  <T extends unknown[]>(...parsers: Parser<T[number]>[]): Parser<T> =>
+export const seq = <T extends unknown[]>(...parsers: { [K in keyof T]: Parser<T[K]> }): Parser<T> =>
   (input: string, index = 0) => {
     const values = [] as unknown as T;
     let currentIndex = index;
@@ -164,7 +163,11 @@ export const many1 = <T>(parser: Parser<T>): Parser<T[]> => (input: string, inde
     currentIndex = result.index;
   }
 
-  return { success: true, value: values, index: currentIndex };
+  return { 
+    success: true, 
+    value: values as T[],  // Explicit array type
+    index: currentIndex 
+  };
 };
 
 /**
@@ -186,8 +189,8 @@ export const between =
   (left: Parser<unknown>, right: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
     map(
-      seq(left, parser, right) as Parser<[unknown, T, unknown]>,
-      ([, value]) => value,
+      seq(left, parser, right),
+      (result: [unknown, T, unknown]) => result[1]
     );
 
 /**
@@ -296,7 +299,7 @@ export const whitespace =
  */
 export const whitespaces: Parser<void> = map(
   many(whitespace()),
-  () => undefined,
+  () => undefined
 );
 
 /**
@@ -348,14 +351,14 @@ export const integer = (): Parser<number> =>
  * sepBy(char(','))(letter())('a,b,c') // => ['a','b','c']
  */
 export const sepBy =
-  (separator: Parser<unknown>) =>
+  <S>(separator: Parser<S>) =>
   <T>(item: Parser<T>): Parser<T[]> =>
     map(
       seq(
         item,
         many(seq(separator, item))
       ),
-      ([first, rest]) => [first, ...rest.map(([, i]) => i)]
+      (result: [T, Array<[S, T]>]) => [result[0], ...result[1].map(([, i]) => i)]
     );
 
 /**
