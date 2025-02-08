@@ -66,13 +66,12 @@ describe('Chaining Combinators', () => {
       index: 1,
     });
 
-    // Test type inference through chain
     const result = parser('3___', 0);
     if (result.success) {
-      // @ts-expect-error - should fail type check (expect number, got string[])
+      // @ts-expect-error - number is not assignable to string[]
       const num: number = result.value;
-      // Proper type should be string[]
-      const arr: string[] = result.value; // This should be valid
+      const arr: string[] = result.value;
+      expect(arr).toEqual(['_', '_', '_']);
     }
   });
 
@@ -82,6 +81,12 @@ describe('Chaining Combinators', () => {
       success: true,
       value: 'test',
     });
+    // Verify type is preserved
+    const result = parser('test', 0);
+    if (result.success) {
+      const str: string = result.value;
+      expect(str).toBe('test');
+    }
   });
 
   test('andThen maintains error positions', () => {
