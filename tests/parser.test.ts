@@ -107,7 +107,7 @@ describe('Convenience Combinators', () => {
     const p = until(string('*/'))(anyChar);
     expect(p('abc*/def')).toMatchObject({
       value: ['a', 'b', 'c'],
-      index: 5,
+      index: 3,
     });
   });
 
