@@ -460,14 +460,17 @@ export const andThen = <T, Fns extends ((value: any) => Parser<any>)[]>(
   parser: Parser<T>,
   ...fns: Fns
 ): Parser<AndThenChain<T, Fns>> => {
-  return fns.reduce((currentParser, fn) => {
-    return (input: string, index: number) => {
-      const result = currentParser(input, index);
-      if (!result.success) return result;
-      const nextParser = fn(result.value);
-      return nextParser(input, result.index);
-    };
-  }, parser as Parser<any>);
+  return fns.reduce(
+    (currentParser, fn) => {
+      return (input: string, index: number) => {
+        const result = currentParser(input, index);
+        if (!result.success) return result;
+        const nextParser = fn(result.value);
+        return nextParser(input, result.index);
+      };
+    },
+    parser as Parser<any>,
+  );
 };
 
 /**
