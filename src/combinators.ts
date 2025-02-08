@@ -82,6 +82,19 @@ export const fail =
   (_: string, index = 0) => ({ success: false, expected: [expected], index });
 
 /**
+ * Adds semantic labeling to parser errors for better error messages
+ * @example
+ * const int = label('integer', many1(digit()));
+ * int('a12') // fails with expected: ['integer']
+ */
+export const label =
+  <T>(message: string, parser: Parser<T>): Parser<T> =>
+  (input: string, index = 0) => {
+    const result = parser(input, index);
+    return result.success ? result : { ...result, expected: [message] };
+  };
+
+/**
  * Tries multiple parsers in order, returning first success. Enables alternative patterns.
  * @example
  * const aOrB = alt(char('a'), char('b'));
@@ -414,12 +427,17 @@ export const digit = (): Parser<string> =>
  * integer()('-123') // => -123
  */
 export const integer = (): Parser<number> =>
-  map(
-    seq(optional(alt(char('-'), char('+'))), many1(digit())),
-    ([sign, digits]) => {
-      const num = Number.parseInt(digits.join(''), 10);
-      return sign === '-' ? -num : num;
-    },
+  label('integer',
+    map(
+      seq(
+        optional(alt(char('-'), char('+'))),
+        label('digit', many1(digit()))
+      ),
+      ([sign, digits]) => {
+        const num = Number.parseInt(digits.join(''), 10);
+        return sign === '-' ? -num : num;
+      },
+    )
   );
 
 /**

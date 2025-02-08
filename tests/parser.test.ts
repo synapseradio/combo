@@ -64,7 +64,7 @@ describe('Chaining Combinators', () => {
     // Test failure in first parser
     expect(parser('a___', 0)).toMatchObject({
       success: false,
-      expected: ['integer'], // From integer() parser
+      expected: ['digit'], // Now gets the underlying error
       index: 0,
     });
 
