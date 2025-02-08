@@ -445,18 +445,47 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
+type AndThenChain<T, Fns extends ((value: never) => Parser<unknown>)[]> = 
+  Fns extends [infer First, ...infer Rest]
+    ? First extends (value: T) => Parser<infer U>
+      ? AndThenChain<U, Rest>
+      : never
+    : T;
+
 /**
- * Chains parsers based on previous result
+ * Variadic chain of dependent parsers with strict type safety
  * @example
- * andThen(letter(), c => string(c.toUpperCase()))('aA') // => 'A'
+ * const parser = andThen(
+ *   char('a'),
+ *   (a: string) => string(a.toUpperCase()), 
+ *   (upperA: string) => integer().map(n => upperA.repeat(n))
+ * );
+ * parser('aA3') // => 'AAA'
  */
-export const andThen =
-  <T, U>(parser: Parser<T>, fn: (value: T) => Parser<U>): Parser<U> =>
-  (input, index = 0) => {
-    const result = parser(input, index);
-    if (!result.success) return result;
-    return fn(result.value)(input, result.index);
-  };
+export const andThen = <
+  T,
+  Fns extends [(value: T) => Parser<unknown>, ...Array<(value: unknown) => Parser<unknown>>]
+>(
+  parser: Parser<T>,
+  ...fns: Fns & {
+    [K in keyof Fns]: (value: AndThenChain<T, Take<K, Fns>>) => 
+      ReturnType<Fns[K]> extends Parser<infer U> ? Parser<U> : never
+  }
+): Parser<AndThenChain<T, Fns>> => {
+  return fns.reduce((currentParser, fn) => 
+    (input: string, index: number) => {
+      const result = currentParser(input, index);
+      return result.success 
+        ? (fn as (value: typeof result.value) => Parser<unknown>)(result.value)(input, result.index)
+        : result;
+    },
+    parser
+  ) as Parser<AndThenChain<T, Fns>>;
+};
+
+// Helper type for tuple processing
+type Take<K extends PropertyKey, Fns extends unknown[]> = 
+  K extends keyof Fns ? Fns[K] extends (value: never) => Parser<infer U> ? U : never : never;
 
 /**
  * Provides fallback error messages
