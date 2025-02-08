@@ -112,7 +112,7 @@ describe('Convenience Combinators', () => {
     const p = until(string('*/'))(anyChar);
     expect(p('abc*/def')).toMatchObject({
       value: ['a', 'b', 'c'],
-      index: 3
+      index: 3,
     });
   });
 
@@ -169,7 +169,7 @@ describe('New Combinators', () => {
     const p = sepBy(char(','))(letter());
     expect(p('a,b,c')).toMatchObject({
       value: ['a', 'b', 'c'],
-      index: 5
+      index: 5,
     });
   });
 
