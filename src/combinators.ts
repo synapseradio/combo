@@ -447,30 +447,27 @@ type InferParserType<P extends Parser<unknown>> = P extends Parser<infer T>
   ? T
   : never;
 
-type AndThenChain<
-  T,
-  Fns extends ((value: T) => Parser<unknown>)[],
-> = Fns extends [infer First, ...infer Rest]
-  ? First extends (value: T) => Parser<infer U>
-    ? AndThenChain<U, Rest>
-    : never
-  : T;
+type AndThenChain<T, Fns> = Fns extends []
+  ? T
+  : Fns extends [(value: T) => Parser<infer U>, ...infer Rest]
+  ? AndThenChain<U, Rest>
+  : never;
 
-export const andThen = <T, Fns extends ((value: T) => Parser<unknown>)[]>(
+export const andThen = <T, Fns extends ((value: unknown) => Parser<unknown>)[]>(
   parser: Parser<T>,
   ...fns: Fns
 ): Parser<AndThenChain<T, Fns>> => {
   return fns.reduce(
-    (currentParser, fn) => (input: string, index: number) => {
-      const result = currentParser(input, index);
-      if (!result.success) return result as ParseResult<AndThenChain<T, Fns>>;
-      const nextParser = fn(result.value);
-      return nextParser(input, result.index) as ParseResult<
-        AndThenChain<T, Fns>
-      >;
+    (acc: Parser<unknown>, fn: (value: unknown) => Parser<unknown>) => {
+      return (input: string, index = 0) => {
+        const result = acc(input, index);
+        if (!result.success) return result;
+        const nextParser = fn(result.value);
+        return nextParser(input, result.index);
+      };
     },
-    parser as Parser<AndThenChain<T, Fns>>,
-  );
+    parser as Parser<unknown>
+  ) as Parser<AndThenChain<T, Fns>>;
 };
 
 /**
