@@ -1,6 +1,15 @@
 import type { ParseResult, Parser } from './-types';
 
-// add comments for each function that does not have them explaining why they exist, where best to use them, and an example of correct use in JSDocs. AI!
+/**
+ * Memoization decorator for parsers. Caches results at each position to prevent
+ * redundant parsing. Essential for:
+ * - Recursive grammars
+ * - Looping constructs
+ * - Performance-critical paths
+ * @example
+ * const memoizedExpr = memoize(expressionParser);
+ * memoizedExpr('(1+2)*3'); // Caches intermediate results
+ */
 const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
 
 export const memoize = <T>(parser: Parser<T>): Parser<T> => {
@@ -25,7 +34,8 @@ export const memoize = <T>(parser: Parser<T>): Parser<T> => {
 /**
  * Matches a single specific character. Basic building block for token recognition.
  * @example
- * const parseA = char('apple', 0); // => { success: true, value: 'a', index: 1 }
+ * const parseA = char('a');
+ * parseA('apple', 0); // => { success: true, value: 'a', index: 1 }
  */
 export const char = (c: string): Parser<string> => {
   const expected = [`'${c}'`];
@@ -268,7 +278,14 @@ export const until =
   };
 
 /**
- * Succeeds if the parser would fail (zero-width)
+ * Negative lookahead assertion. Succeeds if the parser would fail.
+ * Useful for:
+ * - Reserved keyword validation
+ * - Syntax boundary detection
+ * - Conditional parsing logic
+ * @example
+ * const notKeyword = seq(not(string("function")), identifier);
+ * notKeyword('function'); // Fails as expected
  */
 export const not =
   (parser: Parser<unknown>): Parser<null> =>
@@ -285,7 +302,14 @@ export const not =
   };
 
 /**
- * Fails if the exclusion parser matches
+ * Exclusion combinator. Fails if exclusion parser matches first.
+ * Typical uses:
+ * - Blocking reserved words in identifiers
+ * - Preventing syntax collisions
+ * - Context-sensitive parsing
+ * @example
+ * const nonNumericId = except(digit())(many1(letter()));
+ * nonNumericId('a1'); // Fails on '1'
  */
 export const except =
   (exclusion: Parser<unknown>) =>
@@ -304,7 +328,13 @@ export const except =
   };
 
 /**
- * Matches any single character (fails at EOF)
+ * Universal character consumer. Core building block for:
+ * - Custom token parsers
+ * - Low-level text processing
+ * - Fallback character handling
+ * @example
+ * const parseFirstChar = anyChar;
+ * parseFirstChar('abc'); // => 'a'
  */
 export const anyChar: Parser<string> = (input: string, index = 0) =>
   index < input.length
@@ -312,7 +342,13 @@ export const anyChar: Parser<string> = (input: string, index = 0) =>
     : { success: false, expected: ['any character'], index };
 
 /**
- * Skips zero or more whitespace characters
+ * Single whitespace detector. Foundational for:
+ * - Space-sensitive formats
+ * - Column-aware parsing
+ * - Mixed whitespace handling
+ * @example
+ * const tabParser = whitespace();
+ * tabParser('\t'); // => '\t'
  */
 export const whitespace =
   (): Parser<string> =>
@@ -325,7 +361,13 @@ export const whitespace =
   };
 
 /**
- * Skips zero or more whitespace characters
+ * Bulk whitespace consumer. Critical for:
+ * - Language with insignificant whitespace
+ * - Pre-token trimming
+ * - Formatting-agnostic parsing
+ * @example
+ * const ws = whitespaces();
+ * ws('   \t\n'); // Skips 5 chars
  */
 export const whitespaces =
   (): Parser<void> =>
@@ -468,7 +510,13 @@ export const eof =
         };
   };
 
-// Intuitive aliases
+/**
+ * Alias collection for API clarity:
+ * - `either`: Alternative naming for alt()
+ * - `sequence`: Explicit sequencing intent
+ * - `maybe`: Semantic optionality
+ * - `zeroOrMore`: Clear repetition intent
+ */
 export const either = alt;
 export const sequence = seq;
 export const maybe = optional;
