@@ -168,10 +168,9 @@ export const many = <T>(parser: Parser<T>): Parser<T[]> => {
   return (input: string, index = 0) => {
     const values: T[] = [];
     let currentIndex = index;
-    let result: ParseResult<T>;
-
-    // biome-ignore lint/suspicious/noAssignInExpressions: performance optimization
-    while ((result = parserFn(input, currentIndex)).success) {
+    for (let result: ParseResult<T>; ; ) {
+      result = parserFn(input, currentIndex);
+      if (!result.success) break;
       values.push(result.value);
       currentIndex = result.index;
     }
@@ -385,7 +384,7 @@ export const whitespaces =
  */
 export const letter = (): Parser<string> =>
   map(
-    anyChar as Parser<string>,
+    anyChar,
     (c: string) => {
       if (/^[a-zA-Z]$/.test(c)) return c;
       throw new Error('Not a letter');
@@ -401,7 +400,7 @@ export const letter = (): Parser<string> =>
 export const digit = (): Parser<string> =>
   map(
     anyChar,
-    (c: string) => {
+    (c) => {
       // Explicit type
       if (/\d/.test(c)) return c;
       throw new Error('Not a digit');
@@ -461,11 +460,9 @@ type AndThenChain<
 export const andThen = <T, Fns extends ((value: T) => Parser<any>)[]>(
   parser: Parser<T>,
   ...fns: Fns & {
-    [K in keyof Fns]: K extends number
-      ? Fns[K] extends (value: infer V) => Parser<infer W>
+    [K in keyof Fns]: Fns[K] extends (value: infer V) => Parser<infer W>
         ? (value: V) => Parser<W>
-        : never
-      : never;
+        : never;
   }
 ): Parser<AndThenChain<T, Fns>> => {
   return fns.reduce(
