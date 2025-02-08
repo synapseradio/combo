@@ -1,4 +1,4 @@
-import type { Parser, ParseResult } from './-types';
+import type { ParseResult, Parser } from './-types';
 
 /**
  * Matches a single specific character. Basic building block for token recognition.
@@ -75,21 +75,21 @@ export const alt =
  * const abParser = seq(char('a'), char('b'));
  * abParser('abc', 0) // => { success: true, value: ['a', 'b'], index: 2 }
  */
-export const seq = <T extends unknown[]>(
-  ...parsers: Parser<T[number]>[]
-): Parser<T> => (input: string, index = 0) => {
-  const values = [] as unknown as T;
-  let currentIndex = index;
+export const seq =
+  <T extends unknown[]>(...parsers: Parser<T[number]>[]): Parser<T> =>
+  (input: string, index = 0) => {
+    const values = [] as unknown as T;
+    let currentIndex = index;
 
-  for (const parser of parsers) {
-    const result = parser(input, currentIndex);
-    if (!result.success) return result as ParseResult<T>;
-    values.push(result.value);
-    currentIndex = result.index;
-  }
+    for (const parser of parsers) {
+      const result = parser(input, currentIndex);
+      if (!result.success) return result as ParseResult<T>;
+      values.push(result.value);
+      currentIndex = result.index;
+    }
 
-  return { success: true, value: values, index: currentIndex };
-};
+    return { success: true, value: values, index: currentIndex };
+  };
 
 /**
  * Transforms parser result using a mapping function. Enables data normalization.
@@ -161,7 +161,7 @@ export const between =
   <T>(parser: Parser<T>): Parser<T> =>
     map(
       seq(left, parser, right) as Parser<[unknown, T, unknown]>,
-      ([, value]) => value
+      ([, value]) => value,
     );
 
 /**
@@ -172,10 +172,7 @@ export const between =
 export const after =
   (prefix: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
-    map(
-      seq(prefix, parser) as Parser<[unknown, T]>,
-      ([, value]) => value
-    );
+    map(seq(prefix, parser) as Parser<[unknown, T]>, ([, value]) => value);
 
 /**
  * Parses content until a stop condition is met
@@ -287,7 +284,7 @@ export const letter = (): Parser<string> =>
       if (/^[a-zA-Z]$/.test(c)) return c;
       throw new Error('Not a letter');
     },
-    (c: string) => /^[a-zA-Z]$/.test(c)
+    (c: string) => /^[a-zA-Z]$/.test(c),
   );
 
 // Intuitive aliases
