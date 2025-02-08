@@ -427,17 +427,15 @@ export const digit = (): Parser<string> =>
  * integer()('-123') // => -123
  */
 export const integer = (): Parser<number> =>
-  label('integer',
+  label(
+    'integer',
     map(
-      seq(
-        optional(alt(char('-'), char('+'))),
-        label('digit', many1(digit()))
-      ),
+      seq(optional(alt(char('-'), char('+'))), label('digit', many1(digit()))),
       ([sign, digits]) => {
         const num = Number.parseInt(digits.join(''), 10);
         return sign === '-' ? -num : num;
       },
-    )
+    ),
   );
 
 /**
@@ -461,7 +459,6 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
-
 type Chain<T, U> = (value: T) => Parser<U>;
 
 /**
@@ -472,30 +469,28 @@ type Chain<T, U> = (value: T) => Parser<U>;
  *   n => string(n.toString())
  * );
  */
-export function andThen<First>(
-  parser: Parser<First>
-): Parser<First>;
+export function andThen<First>(parser: Parser<First>): Parser<First>;
 export function andThen<First, Last>(
   parser: Parser<First>,
-  fn: Chain<First, Last>
+  fn: Chain<First, Last>,
 ): Parser<Last>;
 export function andThen<First, Second, Last>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
-  fn2: Chain<Second, Last>
+  fn2: Chain<Second, Last>,
 ): Parser<Last>;
 export function andThen<First, Second, Third, Last>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
   fn2: Chain<Second, Third>,
-  fn3: Chain<Third, Last>
+  fn3: Chain<Third, Last>,
 ): Parser<Last>;
 export function andThen<First, Second, Third, Fourth, Last>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
   fn2: Chain<Second, Third>,
   fn3: Chain<Third, Fourth>,
-  fn4: Chain<Fourth, Last>
+  fn4: Chain<Fourth, Last>,
 ): Parser<Last>;
 export function andThen<First, Second, Third, Fourth, Fifth, Last>(
   parser: Parser<First>,
@@ -503,7 +498,7 @@ export function andThen<First, Second, Third, Fourth, Fifth, Last>(
   fn2: Chain<Second, Third>,
   fn3: Chain<Third, Fourth>,
   fn4: Chain<Fourth, Fifth>,
-  fn5: Chain<Fifth, Last>
+  fn5: Chain<Fifth, Last>,
 ): Parser<Last>;
 export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Last>(
   parser: Parser<First>,
@@ -512,9 +507,18 @@ export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Last>(
   fn3: Chain<Third, Fourth>,
   fn4: Chain<Fourth, Fifth>,
   fn5: Chain<Fifth, Sixth>,
-  fn6: Chain<Sixth, Last>
+  fn6: Chain<Sixth, Last>,
 ): Parser<Last>;
-export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Last>(
+export function andThen<
+  First,
+  Second,
+  Third,
+  Fourth,
+  Fifth,
+  Sixth,
+  Seventh,
+  Last,
+>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
   fn2: Chain<Second, Third>,
@@ -522,9 +526,19 @@ export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Las
   fn4: Chain<Fourth, Fifth>,
   fn5: Chain<Fifth, Sixth>,
   fn6: Chain<Sixth, Seventh>,
-  fn7: Chain<Seventh, Last>
+  fn7: Chain<Seventh, Last>,
 ): Parser<Last>;
-export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Last>(
+export function andThen<
+  First,
+  Second,
+  Third,
+  Fourth,
+  Fifth,
+  Sixth,
+  Seventh,
+  Eighth,
+  Last,
+>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
   fn2: Chain<Second, Third>,
@@ -533,9 +547,20 @@ export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eig
   fn5: Chain<Fifth, Sixth>,
   fn6: Chain<Sixth, Seventh>,
   fn7: Chain<Seventh, Eighth>,
-  fn8: Chain<Eighth, Last>
+  fn8: Chain<Eighth, Last>,
 ): Parser<Last>;
-export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Ninth, Last>(
+export function andThen<
+  First,
+  Second,
+  Third,
+  Fourth,
+  Fifth,
+  Sixth,
+  Seventh,
+  Eighth,
+  Ninth,
+  Last,
+>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
   fn2: Chain<Second, Third>,
@@ -545,9 +570,21 @@ export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eig
   fn6: Chain<Sixth, Seventh>,
   fn7: Chain<Seventh, Eighth>,
   fn8: Chain<Eighth, Ninth>,
-  fn9: Chain<Ninth, Last>
+  fn9: Chain<Ninth, Last>,
 ): Parser<Last>;
-export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Ninth, Tenth, Last>(
+export function andThen<
+  First,
+  Second,
+  Third,
+  Fourth,
+  Fifth,
+  Sixth,
+  Seventh,
+  Eighth,
+  Ninth,
+  Tenth,
+  Last,
+>(
   parser: Parser<First>,
   fn1: Chain<First, Second>,
   fn2: Chain<Second, Third>,
@@ -558,17 +595,21 @@ export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eig
   fn7: Chain<Seventh, Eighth>,
   fn8: Chain<Eighth, Ninth>,
   fn9: Chain<Ninth, Tenth>,
-  fn10: Chain<Tenth, Last>
+  fn10: Chain<Tenth, Last>,
 ): Parser<Last>;
 export function andThen<T>(
   parser: Parser<T>,
   ...fns: Chain<unknown, T>[]
 ): Parser<T> {
-  return fns.reduce((p, fn) => (input: string, index = 0) => {
-    const result = p(input, index);
-    if (!result.success) return result;
-    return fn(result.value)(input, result.index);
-  }, parser);
+  return fns.reduce(
+    (p, fn) =>
+      (input: string, index = 0) => {
+        const result = p(input, index);
+        if (!result.success) return result;
+        return fn(result.value)(input, result.index);
+      },
+    parser,
+  );
 }
 
 /**
