@@ -156,7 +156,7 @@ describe('Utility Parsers', () => {
   });
 
   test('whitespaces skips multiple whitespace', () => {
-    const p = whitespaces;
+    const p = whitespaces();
     expect(p('   \t\n')).toMatchObject({
       success: true,
       index: 5,
