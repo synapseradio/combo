@@ -49,21 +49,21 @@ describe('Chaining Combinators', () => {
     const parser = andThen(
       integer(),
       (n) => string('_'.repeat(n)), // Chain integer to dynamic string
-      (s) => many(char(s[0])) // Chain string to repeated chars
+      (s) => many(char(s[0])), // Chain string to repeated chars
     );
 
     // Test successful chain
     expect(parser('3_aaa', 0)).toMatchObject({
       success: true,
       value: ['a', 'a', 'a'],
-      index: 4
+      index: 4,
     });
 
     // Test failure propagation
     expect(parser('2__aa', 0)).toMatchObject({
       success: false,
       expected: ["'__'"],
-      index: 1
+      index: 1,
     });
 
     // Test type inference through chain
@@ -80,7 +80,7 @@ describe('Chaining Combinators', () => {
     const parser = andThen(string('test'));
     expect(parser('test', 0)).toMatchObject({
       success: true,
-      value: 'test'
+      value: 'test',
     });
   });
 
@@ -88,14 +88,14 @@ describe('Chaining Combinators', () => {
     const parser = andThen(
       char('a'),
       () => char('b'),
-      () => char('c')
+      () => char('c'),
     );
-    
+
     const result = parser('abd', 0);
     expect(result).toMatchObject({
       success: false,
       expected: ["'c'"],
-      index: 2
+      index: 2,
     });
   });
 });
