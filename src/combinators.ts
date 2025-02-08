@@ -465,9 +465,11 @@ export const andThen = <T, Fns extends ((value: T) => Parser<unknown>)[]>(
       const result = currentParser(input, index);
       if (!result.success) return result as ParseResult<AndThenChain<T, Fns>>;
       const nextParser = fn(result.value);
-      return nextParser(input, result.index) as ParseResult<AndThenChain<T, Fns>>;
+      return nextParser(input, result.index) as ParseResult<
+        AndThenChain<T, Fns>
+      >;
     },
-    parser as Parser<AndThenChain<T, Fns>>
+    parser as Parser<AndThenChain<T, Fns>>,
   );
 };
 
