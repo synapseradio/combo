@@ -329,7 +329,8 @@ export const digit = (): Parser<string> =>
   map(anyChar, (c) => {
     if (/\d/.test(c)) return c;
     throw new Error('Not a digit');
-  });
+  },
+  (c: string) => /\d/.test(c));
 
 /**
  * Parses an integer with optional sign
@@ -338,11 +339,15 @@ export const digit = (): Parser<string> =>
  */
 export const integer = (): Parser<number> =>
   map(
-    seq(optional(alt(char('-'), char('+'))), many1(digit())),
+    seq(
+      optional(alt(char('-'), char('+'))),
+      many1(digit())
+    ),
     ([sign, digits]) => {
-      const num = Number.parseInt(digits.join(''), 10);
+      const num = parseInt(digits.join(''), 10);
       return sign === '-' ? -num : num;
     },
+    ([, digits]) => digits.length > 0
   );
 
 /**
