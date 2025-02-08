@@ -219,6 +219,7 @@ export const not =
     return result.success
       ? {
           success: false,
+          // fix Property 'expected' does not exist on type '{ success: true; value: unknown; index: number; }'. AI!
           expected: [`not ${result.expected.join(' or ')}`],
           index,
         }
