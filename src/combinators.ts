@@ -451,14 +451,14 @@ type InferParserType<P extends Parser<unknown>> = P extends Parser<infer T>
 
 type AndThenChain<
   T,
-  Fns extends ((value: any) => Parser<any>)[],
+  Fns extends ((value: unknown) => Parser<unknown>)[],
 > = Fns extends [infer First, ...infer Rest]
   ? First extends (value: T) => Parser<infer U>
     ? AndThenChain<U, Rest>
-    : never
+    : T // Changed from never to T
   : T;
 
-export const andThen = <T, Fns extends ((value: T) => Parser<any>)[]>(
+export const andThen = <T, Fns extends ((value: T) => Parser<T>)[]>(
   parser: Parser<T>,
   ...fns: Fns & {
     [K in keyof Fns]: K extends number
@@ -471,12 +471,16 @@ export const andThen = <T, Fns extends ((value: T) => Parser<any>)[]>(
   return fns.reduce(
     (currentParser, fn) => (input: string, index: number) => {
       const result = currentParser(input, index);
-      return result.success
-        ? (fn as (value: T) => Parser<any>)(result.value)(input, result.index)
-        : result;
+      if (!result.success) return result;
+      // Extract the type of the currentParser
+      type CurrentParserType = InferParserType<typeof currentParser>;
+      // Cast fn to the correct type
+      const typedFn = fn as (value: CurrentParserType) => Parser<any>;
+      const nextParser = typedFn(result.value);
+      return nextParser(input, result.index) as ParseResult<any>;
     },
     parser,
-  ) as Parser<AndThenChain<T, Fns>>;
+  ) as any;
 };
 
 /**
@@ -500,7 +504,8 @@ export const recoverWith =
 /**
  * Parses without consuming input (zero-width assertion)
  * @example
- * peek(string('http'))('https') // success (index remains 0)
+ * peek(string('http'))('https') // success
+ * peek(string('http'))('https') // success
  */
 export const peek =
   <T>(parser: Parser<T>): Parser<T> =>
