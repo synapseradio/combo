@@ -419,7 +419,7 @@ export const integer = (): Parser<number> =>
     ([sign, digits]) => {
       const num = Number.parseInt(digits.join(''), 10);
       return sign === '-' ? -num : num;
-    }
+    },
   );
 
 /**
