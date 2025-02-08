@@ -1,5 +1,6 @@
 import type { ParseResult, Parser } from './-types';
 
+// add comments for each function that does not have them explaining why they exist, where best to use them, and an example of correct use in JSDocs. AI!
 const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
 
 export const memoize = <T>(parser: Parser<T>): Parser<T> => {
