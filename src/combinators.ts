@@ -1,16 +1,28 @@
 import type { ParseResult, Parser } from './-types';
 
+const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
+
+export const memoize = <T>(parser: Parser<T>): Parser<T> => 
+  (input: string, index = 0) => {
+    if (!memo.has(parser)) memo.set(parser, new Map());
+    const cache = memo.get(parser)!;
+    
+    return cache.get(index) ?? (cache.set(index, parser(input, index)), cache.get(index)!);
+  };
+
 /**
  * Matches a single specific character. Basic building block for token recognition.
  * @example
  * const parseA = char('apple', 0); // => { success: true, value: 'a', index: 1 }
  */
 export const char =
-  (c: string): Parser<string> =>
-  (input: string, index = 0) =>
-    input[index] === c
-      ? { success: true, value: c, index: index + 1 }
-      : { success: false, expected: [`'${c}'`], index };
+  (c: string): Parser<string> => {
+    const expected = [`'${c}'`];
+    return (input: string, index = 0) =>
+      input[index] === c
+        ? { success: true, value: c, index: index + 1 }
+        : { success: false, expected, index };
+  };
 
 /**
  * Matches an exact string sequence. Essential for keyword recognition.
@@ -19,11 +31,15 @@ export const char =
  * parseHello('hello world', 0) // => { success: true, value: 'hello', index: 5 }
  */
 export const string =
-  (s: string): Parser<string> =>
-  (input: string, index = 0) =>
-    input.startsWith(s, index)
-      ? { success: true, value: s, index: index + s.length }
-      : { success: false, expected: [`'${s}'`], index };
+  (s: string): Parser<string> => {
+    const len = s.length;
+    return (input: string, index = 0) => {
+      if (input.slice(index, index + len) === s) {
+        return { success: true, value: s, index: index + len };
+      }
+      return { success: false, expected: [`'${s}'`], index };
+    };
+  };
 
 /**
  * Always succeeds with provided value, consumes no input. Useful for default values.
@@ -127,21 +143,21 @@ export const map =
  * const manyA = many(char('a'));
  * manyA('aaabbb', 0) // => { success: true, value: ['a','a','a'], index: 3 }
  */
-export const many =
-  <T>(parser: Parser<T>): Parser<T[]> =>
-  (input: string, index = 0) => {
+export const many = <T>(parser: Parser<T>): Parser<T[]> => {
+  const parserFn = parser as (input: string, index: number) => ParseResult<T>;
+  return (input: string, index = 0) => {
     const values: T[] = [];
     let currentIndex = index;
-
-    while (true) {
-      const result = parser(input, currentIndex);
-      if (!result.success) break;
+    let result: ParseResult<T>;
+    
+    while ((result = parserFn(input, currentIndex)).success) {
       values.push(result.value);
       currentIndex = result.index;
     }
-
+    
     return { success: true, value: values, index: currentIndex };
   };
+};
 
 /**
  * Repeatedly applies a parser one or more times.
@@ -300,10 +316,15 @@ export const whitespace =
 /**
  * Skips zero or more whitespace characters
  */
-export const whitespaces: Parser<void> = map(
-  many(whitespace()),
-  () => undefined,
-);
+export const whitespaces = (): Parser<void> => 
+  (input: string, index = 0) => {
+    let currentIndex = index;
+    while (
+      currentIndex < input.length && 
+      /\s/.test(input[currentIndex])
+    ) currentIndex++;
+    return { success: true, value: undefined, index: currentIndex };
+  };
 
 /**
  * Matches any English letter (a-z, A-Z)
