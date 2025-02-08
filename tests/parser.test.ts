@@ -154,7 +154,7 @@ describe('Utility Parsers', () => {
     const p = whitespaces;
     expect(p('   \t\n')).toMatchObject({
       success: true,
-      index: 4,
+      index: 5, // Changed from 4 to 5 (3 spaces + \t + \n)
     });
   });
 });

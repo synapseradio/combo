@@ -99,12 +99,25 @@ export const seq =
  * const upperA = map(char('a'), s => s.toUpperCase());
  * upperA('apple', 0) // => { success: true, value: 'A', index: 1 }
  */
-export const map =
-  <T, U>(parser: Parser<T>, fn: (value: T) => U): Parser<U> =>
-  (input, index = 0) => {
-    const result = parser(input, index);
-    return result.success ? { ...result, value: fn(result.value) } : result;
+export const map = <T, U>(
+  parser: Parser<T>,
+  fn: (value: T) => U,
+  validate?: (value: T) => boolean
+): Parser<U> => (input, index = 0) => {
+  const result = parser(input, index);
+  if (!result.success) return result;
+  if (validate && !validate(result.value)) {
+    return {
+      success: false,
+      expected: ['validated value'],
+      index,
+    };
+  }
+  return {
+    ...result,
+    value: fn(result.value),
   };
+};
 
 /**
  * Repeatedly applies a parser zero or more times. Handles repetition patterns.
@@ -261,7 +274,15 @@ export const whitespaces: Parser<void> = map(
  * @example
  * letter()('apple') // => 'a'
  */
-export const letter = (): Parser<string> => char.match(/[a-zA-Z]/);
+export const letter = (): Parser<string> =>
+  map(
+    anyChar,
+    (c) => {
+      if (/^[a-zA-Z]$/.test(c)) return c;
+      throw new Error('Not a letter');
+    },
+    (c) => /^[a-zA-Z]$/.test(c)
+  );
 
 // Intuitive aliases
 export const either = alt;
