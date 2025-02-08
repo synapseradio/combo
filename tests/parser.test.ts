@@ -5,13 +5,18 @@ import {
   anyChar,
   between,
   char,
+  digit,
+  eof,
   except,
+  integer,
   letter,
   many,
   not,
   optional,
   seq,
+  sepBy,
   string,
+  token,
   until,
   whitespace,
   whitespaces,
@@ -156,5 +161,44 @@ describe('Utility Parsers', () => {
       success: true,
       index: 5,
     });
+  });
+});
+
+describe('New Combinators', () => {
+  test('sepBy handles comma-separated values', () => {
+    const p = sepBy(char(','))(letter());
+    expect(p('a,b,c')).toMatchObject({
+      value: ['a', 'b', 'c'],
+      index: 5,
+    });
+  });
+
+  test('token skips whitespace', () => {
+    const p = token(string('function'));
+    expect(p('function   (')).toMatchObject({
+      value: 'function',
+      index: 10, // 'function' + 3 spaces
+    });
+  });
+
+  test('eof enforces end condition', () => {
+    const p = eof(string('test'));
+    expect(p('test')).toMatchObject({ success: true });
+    expect(p('test ')).toMatchObject({
+      success: false,
+      expected: ['end of input'],
+    });
+  });
+
+  test('digit parses single digit', () => {
+    expect(digit()('1')).toMatchObject({ success: true, value: '1' });
+    expect(digit()('a')).toMatchObject({ success: false });
+  });
+
+  test('integer parses integers', () => {
+    expect(integer()('123')).toMatchObject({ success: true, value: 123 });
+    expect(integer()('-456')).toMatchObject({ success: true, value: -456 });
+    expect(integer()('+789')).toMatchObject({ success: true, value: 789 });
+    expect(integer()('abc')).toMatchObject({ success: false });
   });
 });

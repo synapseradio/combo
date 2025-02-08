@@ -142,6 +142,32 @@ export const many =
   };
 
 /**
+ * Repeatedly applies a parser one or more times.
+ * @example
+ * const many1A = many1(char('a'));
+ * many1A('aaabbb', 0) // => { success: true, value: ['a','a','a'], index: 3 }
+ * many1A('bbbaaa', 0) // => { success: false, value: [], index: 0 }
+ */
+export const many1 = <T>(parser: Parser<T>): Parser<T[]> => (input: string, index = 0) => {
+  const values: T[] = [];
+  let currentIndex = index;
+
+  let firstResult = parser(input, currentIndex);
+  if (!firstResult.success) return firstResult;
+  values.push(firstResult.value);
+  currentIndex = firstResult.index;
+
+  while (true) {
+    const result = parser(input, currentIndex);
+    if (!result.success) break;
+    values.push(result.value);
+    currentIndex = result.index;
+  }
+
+  return { success: true, value: values, index: currentIndex };
+};
+
+/**
  * Makes a parser optional. Returns undefined if parser fails. For non-critical elements.
  * @example
  * const optA = optional(char('a'));
@@ -224,7 +250,6 @@ export const not =
           index,
         }
       : { success: true, value: null, index };
-  };
 
 /**
  * Fails if the exclusion parser matches
@@ -288,6 +313,125 @@ export const letter = (): Parser<string> =>
     },
     (c: string) => /^[a-zA-Z]$/.test(c),
   );
+
+/**
+ * Parses a single digit (0-9)
+ * @example
+ * digit()('123') // => '1'
+ */
+export const digit = (): Parser<string> =>
+  map(anyChar, (c) => {
+    if (/\d/.test(c)) return c;
+    throw new Error('Not a digit');
+  });
+
+/**
+ * Parses an integer with optional sign
+ * @example
+ * integer()('-123') // => -123
+ */
+export const integer = (): Parser<number> =>
+  map(
+    seq(
+      optional(alt(char('-'), char('+'))),
+      many1(digit())
+    ),
+    ([sign, digits]) => {
+      const num = parseInt(digits.join(''), 10);
+      return sign === '-' ? -num : num;
+    }
+  );
+
+/**
+ * Parses values separated by a delimiter
+ * @example
+ * sepBy(char(','))(letter())('a,b,c') // => ['a','b','c']
+ */
+export const sepBy =
+  (separator: Parser<unknown>) =>
+  <T>(item: Parser<T>): Parser<T[]> =>
+    map(
+      seq(
+        item,
+        many(seq(separator, item))
+      ),
+      ([first, rest]) => [first, ...rest.map(([, i]) => i)]
+    );
+
+/**
+ * Parses a token followed by optional whitespace
+ * @example
+ * token(string('let'))('let 123') // => 'let' (index after whitespace)
+ */
+export const token =
+  <T>(parser: Parser<T>): Parser<T> =>
+    map(
+      seq(parser, whitespaces),
+      ([value]) => value
+    );
+
+/**
+ * Chains parsers based on previous result
+ * @example
+ * andThen(letter(), c => string(c.toUpperCase()))('aA') // => 'A'
+ */
+export const andThen =
+  <T, U>(parser: Parser<T>, fn: (value: T) => Parser<U>): Parser<U> =>
+  (input, index = 0) => {
+    const result = parser(input, index);
+    if (!result.success) return result;
+    return fn(result.value)(input, result.index);
+  };
+
+/**
+ * Provides fallback error messages
+ * @example
+ * recoverWith(char('a'), ['letter a'])('b') // => expects 'letter a'
+ */
+export const recoverWith =
+  <T>(parser: Parser<T>, expected: string[]): Parser<T> =>
+  (input, index = 0) => {
+    const result = parser(input, index);
+    return result.success ? result : {
+      success: false,
+      expected,
+      index: result.index
+    };
+  };
+
+/**
+ * Parses without consuming input (zero-width assertion)
+ * @example
+ * peek(string('http'))('https') // success (index remains 0)
+ */
+export const peek =
+  <T>(parser: Parser<T>): Parser<T> =>
+  (input, index = 0) => {
+    const result = parser(input, index);
+    return result.success 
+      ? { ...result, index } // Reset index
+      : result;
+  };
+
+/**
+ * Ensures parser consumes entire input
+ * @example
+ * eof(string('hello'))('hello') // success
+ * eof(string('hello'))('helloworld') // fails
+ */
+export const eof =
+  <T>(parser: Parser<T>): Parser<T> =>
+  (input, index = 0) => {
+    const result = parser(input, index);
+    if (!result.success) return result;
+    return result.index === input.length
+      ? result
+      : {
+          success: false,
+          expected: ['end of input'],
+          index: result.index
+        };
+  };
 
 // Intuitive aliases
 export const either = alt;
