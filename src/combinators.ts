@@ -249,7 +249,7 @@ export const not =
           expected: [`not '${String(result.value)}'`],
           index,
         }
-      : { success: true, value: null, index };
+      : { success: true, value: null, index };}
 
 /**
  * Fails if the exclusion parser matches
