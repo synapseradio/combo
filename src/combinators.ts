@@ -75,7 +75,10 @@ export const alt =
  * const abParser = seq(char('a'), char('b'));
  * abParser('abc', 0) // => { success: true, value: ['a', 'b'], index: 2 }
  */
-export const seq = <T extends unknown[]>(...parsers: { [K in keyof T]: Parser<T[K]> }): Parser<T> =>
+export const seq =
+  <T extends unknown[]>(
+    ...parsers: { [K in keyof T]: Parser<T[K]> }
+  ): Parser<T> =>
   (input: string, index = 0) => {
     const values = [] as unknown as T;
     let currentIndex = index;
@@ -147,28 +150,30 @@ export const many =
  * many1A('aaabbb', 0) // => { success: true, value: ['a','a','a'], index: 3 }
  * many1A('bbbaaa', 0) // => { success: false, value: [], index: 0 }
  */
-export const many1 = <T>(parser: Parser<T>): Parser<T[]> => (input: string, index = 0) => {
-  const values: T[] = [];
-  let currentIndex = index;
+export const many1 =
+  <T>(parser: Parser<T>): Parser<T[]> =>
+  (input: string, index = 0) => {
+    const values: T[] = [];
+    let currentIndex = index;
 
-  const firstResult = parser(input, currentIndex);
-  if (!firstResult.success) return firstResult;
-  values.push(firstResult.value);
-  currentIndex = firstResult.index;
+    const firstResult = parser(input, currentIndex);
+    if (!firstResult.success) return firstResult;
+    values.push(firstResult.value);
+    currentIndex = firstResult.index;
 
-  while (true) {
-    const result = parser(input, currentIndex);
-    if (!result.success) break;
-    values.push(result.value);
-    currentIndex = result.index;
-  }
+    while (true) {
+      const result = parser(input, currentIndex);
+      if (!result.success) break;
+      values.push(result.value);
+      currentIndex = result.index;
+    }
 
-  return { 
-    success: true, 
-    value: values as T[],  // Explicit array type
-    index: currentIndex 
+    return {
+      success: true,
+      value: values as T[], // Explicit array type
+      index: currentIndex,
+    };
   };
-};
 
 /**
  * Makes a parser optional. Returns undefined if parser fails. For non-critical elements.
@@ -188,10 +193,7 @@ export const optional = <T>(parser: Parser<T>): Parser<T | undefined> =>
 export const between =
   (left: Parser<unknown>, right: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
-    map(
-      seq(left, parser, right),
-      (result: [unknown, T, unknown]) => result[1]
-    );
+    map(seq(left, parser, right), (result: [unknown, T, unknown]) => result[1]);
 
 /**
  * Parses content after a prefix, ignoring the prefix
@@ -252,7 +254,8 @@ export const not =
           expected: [`not '${String(result.value)}'`],
           index,
         }
-      : { success: true, value: null, index };}
+      : { success: true, value: null, index };
+  };
 
 /**
  * Fails if the exclusion parser matches
@@ -299,7 +302,7 @@ export const whitespace =
  */
 export const whitespaces: Parser<void> = map(
   many(whitespace()),
-  () => undefined
+  () => undefined,
 );
 
 /**
@@ -335,14 +338,11 @@ export const digit = (): Parser<string> =>
  */
 export const integer = (): Parser<number> =>
   map(
-    seq(
-      optional(alt(char('-'), char('+'))),
-      many1(digit())
-    ),
+    seq(optional(alt(char('-'), char('+'))), many1(digit())),
     ([sign, digits]) => {
       const num = Number.parseInt(digits.join(''), 10);
       return sign === '-' ? -num : num;
-    }
+    },
   );
 
 /**
@@ -353,25 +353,18 @@ export const integer = (): Parser<number> =>
 export const sepBy =
   <S>(separator: Parser<S>) =>
   <T>(item: Parser<T>): Parser<T[]> =>
-    map(
-      seq(
-        item,
-        many(seq(separator, item))
-      ),
-      (result: [T, Array<[S, T]>]) => [result[0], ...result[1].map(([, i]) => i)]
-    );
+    map(seq(item, many(seq(separator, item))), (result: [T, Array<[S, T]>]) => [
+      result[0],
+      ...result[1].map(([, i]) => i),
+    ]);
 
 /**
  * Parses a token followed by optional whitespace
  * @example
  * token(string('let'))('let 123') // => 'let' (index after whitespace)
  */
-export const token =
-  <T>(parser: Parser<T>): Parser<T> =>
-    map(
-      seq(parser, whitespaces),
-      ([value]) => value
-    );
+export const token = <T>(parser: Parser<T>): Parser<T> =>
+  map(seq(parser, whitespaces), ([value]) => value);
 
 /**
  * Chains parsers based on previous result
@@ -395,11 +388,13 @@ export const recoverWith =
   <T>(parser: Parser<T>, expected: string[]): Parser<T> =>
   (input, index = 0) => {
     const result = parser(input, index);
-    return result.success ? result : {
-      success: false,
-      expected,
-      index: result.index
-    };
+    return result.success
+      ? result
+      : {
+          success: false,
+          expected,
+          index: result.index,
+        };
   };
 
 /**
@@ -411,7 +406,7 @@ export const peek =
   <T>(parser: Parser<T>): Parser<T> =>
   (input, index = 0) => {
     const result = parser(input, index);
-    return result.success 
+    return result.success
       ? { ...result, index } // Reset index
       : result;
   };
@@ -432,7 +427,7 @@ export const eof =
       : {
           success: false,
           expected: ['end of input'],
-          index: result.index
+          index: result.index,
         };
   };
 
