@@ -443,98 +443,19 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
-type AndThenChain<T0, R> = [(value: T0) => Parser<R>];
-type AndThenChain<T0, T1, R> = [
-  (value: T0) => Parser<T1>,
-  (value: T1) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, R> = [
-  (value: T0) => Parser<T1>,
-  (value: T1) => Parser<T2>,
-  (value: T2) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, R> = [
-  (value: T0) => Parser<T1>,
-  (value: T1) => Parser<T2>,
-  (value: T2) => Parser<T3>,
-  (value: T3) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, T4, R> = [
-  (value: T0) => Parser<T1>,
-  (value: T1) => Parser<T2>,
-  (value: T2) => Parser<T3>,
-  (value: T3) => Parser<T4>,
-  (value: T4) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, T4, T5, R> = [
-  ...AndThenChain<T0, T1, T2, T3, T4, R>,
-  (value: T4) => Parser<T5>,
-  (value: T5) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, T4, T5, T6, R> = [
-  ...AndThenChain<T0, T1, T2, T3, T4, T5, R>,
-  (value: T5) => Parser<T6>,
-  (value: T6) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, R> = [
-  ...AndThenChain<T0, T1, T2, T3, T4, T5, T6, R>,
-  (value: T6) => Parser<T7>,
-  (value: T7) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, T8, R> = [
-  ...AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, R>,
-  (value: T7) => Parser<T8>,
-  (value: T8) => Parser<R>,
-];
-type AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, R> = [
-  ...AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, T8, R>,
-  (value: T8) => Parser<T9>,
-  (value: T9) => Parser<R>,
-];
+type AndThenChain<T, R extends Parser<unknown>[]> = R extends []
+  ? []
+  : R extends [(value: T) => Parser<infer U>, ...infer Rest extends ((value: unknown) => Parser<unknown>)[]]
+    ? [(value: T) => Parser<U>, ...AndThenChain<U, Rest>]
+    : never;
 
-export function andThen<T0, R>(
+export function andThen<T0, R extends Parser<unknown>[]>(
   parser: Parser<T0>,
   ...fns: AndThenChain<T0, R>
-): Parser<R>;
-export function andThen<T0, T1, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, T4, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, T4, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, T4, T5, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, T4, T5, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, T4, T5, T6, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, T4, T5, T6, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, T4, T5, T6, T7, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, T4, T5, T6, T7, T8, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, T8, R>
-): Parser<R>;
-export function andThen<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, R>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, R>
-): Parser<R>;
+): Parser<R extends [] ? T0 : (R extends [(value: T0) => Parser<infer U>] ? U : unknown)>;
 export function andThen(
   parser: Parser<unknown>,
-  ...fns: Array<(value: any) => Parser<unknown>>
+  ...fns: ((value: unknown) => Parser<unknown>)[]
 ) {
   return fns.reduce((currentParser, fn) => {
     return (input: string, index: number) => {
