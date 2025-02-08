@@ -7,18 +7,14 @@ export const memoize = <T>(parser: Parser<T>): Parser<T> => {
     if (!memo.has(parser)) {
       memo.set(parser, new Map());
     }
-    const cache = memo.get(parser);
-    if (!cache) {
-      // This should not happen, but handle it just in case
-      return parser(input, index);
-    }
+    const cache = memo.get(parser)!;
 
     const cached = cache.get(index);
     if (cached) return cached as ParseResult<T>;
 
     const result = parser(input, index);
     cache.set(index, result);
-    return result;
+    return result as ParseResult<T>;
   };
 };
 
@@ -109,10 +105,10 @@ export const seq =
     const values = [] as unknown as T;
     let currentIndex = index;
 
-    for (const parser of parsers) {
+    for (const parser of (parsers as Parser<T[number]>[])) {
       const result = parser(input, currentIndex);
       if (!result.success) return result as ParseResult<T>;
-      values.push(result.value);
+      values.push(result.value as T[number]);
       currentIndex = result.index;
     }
 
@@ -133,7 +129,7 @@ export const map =
   ): Parser<U> =>
   (input: string, index = 0) => {
     const result = parser(input, index);
-    if (!result.success) return result as ParseResult<U>;
+    if (!result.success) return result as ParseResult<U>; // Safe cast
     if (validate && !validate(result.value)) {
       return {
         success: false,
@@ -359,11 +355,11 @@ export const letter = (): Parser<string> =>
 export const digit = (): Parser<string> =>
   map(
     anyChar,
-    (c) => {
+    (c: string) => { // Explicit type
       if (/\d/.test(c)) return c;
       throw new Error('Not a digit');
     },
-    (c: string) => /\d/.test(c),
+    (c: string) => /\d/.test(c) // Explicit type
   );
 
 /**
