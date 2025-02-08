@@ -2,6 +2,7 @@ import type { ParseResult, Parser } from './-types';
 
 const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
 
+
 export const memoize =
   <T>(parser: Parser<T>): Parser<T> =>
   (input: string, index = 0) => {
@@ -152,6 +153,7 @@ export const many = <T>(parser: Parser<T>): Parser<T[]> => {
     let currentIndex = index;
     let result: ParseResult<T>;
 
+    // biome-ignore lint/suspicious/noAssignInExpressions: performance optimization
     while ((result = parserFn(input, currentIndex)).success) {
       values.push(result.value);
       currentIndex = result.index;
@@ -391,7 +393,7 @@ export const sepBy =
  * token(string('let'))('let 123') // => 'let' (index after whitespace)
  */
 export const token = <T>(parser: Parser<T>): Parser<T> =>
-  map(seq(parser, whitespaces), ([value]) => value);
+  map(seq(parser, whitespaces()), ([value]) => value);
 
 /**
  * Chains parsers based on previous result
