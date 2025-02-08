@@ -443,34 +443,22 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
-type InferParserType<P extends Parser<unknown>> = P extends Parser<infer T>
-  ? T
-  : never;
 
-type AndThenChain<
-  T,
-  Fns extends ((value: any) => Parser<any>)[],
-> = Fns extends [infer First, ...infer Rest]
-  ? First extends (value: T) => Parser<infer U>
-    ? AndThenChain<U, Rest>
-    : never
-  : T;
 
-export const andThen = <T, Fns extends ((value: any) => Parser<any>)[]>(
-  parser: Parser<T>,
-  ...fns: Fns
-): Parser<AndThenChain<T, Fns>> => {
-  return fns.reduce(
-    (currentParser, fn) => {
-      return (input: string, index: number) => {
-        const result = currentParser(input, index);
-        if (!result.success) return result;
-        const nextParser = fn(result.value);
-        return nextParser(input, result.index);
-      };
-    },
-    parser as Parser<any>,
-  );
+
+// generate a type for this variadic function that is accurate up to ten parameters using overrides. AI!
+export const andThen = (
+  parser,
+  ...fns
+) => {
+  return fns.reduce((currentParser, fn) => {
+    return (input: string, index: number) => {
+      const result = currentParser(input, index);
+      if (!result.success) return result;
+      const nextParser = fn(result.value);
+      return nextParser(input, result.index);
+    };
+  }, parser);
 };
 
 /**
