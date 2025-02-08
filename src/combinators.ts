@@ -99,25 +99,27 @@ export const seq =
  * const upperA = map(char('a'), s => s.toUpperCase());
  * upperA('apple', 0) // => { success: true, value: 'A', index: 1 }
  */
-export const map = <T, U>(
-  parser: Parser<T>,
-  fn: (value: T) => U,
-  validate?: (value: T) => boolean
-): Parser<U> => (input, index = 0) => {
-  const result = parser(input, index);
-  if (!result.success) return result;
-  if (validate && !validate(result.value)) {
+export const map =
+  <T, U>(
+    parser: Parser<T>,
+    fn: (value: T) => U,
+    validate?: (value: T) => boolean,
+  ): Parser<U> =>
+  (input, index = 0) => {
+    const result = parser(input, index);
+    if (!result.success) return result;
+    if (validate && !validate(result.value)) {
+      return {
+        success: false,
+        expected: ['validated value'],
+        index,
+      };
+    }
     return {
-      success: false,
-      expected: ['validated value'],
-      index,
+      ...result,
+      value: fn(result.value),
     };
-  }
-  return {
-    ...result,
-    value: fn(result.value),
   };
-};
 
 /**
  * Repeatedly applies a parser zero or more times. Handles repetition patterns.
@@ -281,7 +283,7 @@ export const letter = (): Parser<string> =>
       if (/^[a-zA-Z]$/.test(c)) return c;
       throw new Error('Not a letter');
     },
-    (c) => /^[a-zA-Z]$/.test(c)
+    (c) => /^[a-zA-Z]$/.test(c),
   );
 
 // Intuitive aliases
