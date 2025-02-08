@@ -152,7 +152,7 @@ export const many1 = <T>(parser: Parser<T>): Parser<T[]> => (input: string, inde
   const values: T[] = [];
   let currentIndex = index;
 
-  let firstResult = parser(input, currentIndex);
+  const firstResult = parser(input, currentIndex);
   if (!firstResult.success) return firstResult;
   values.push(firstResult.value);
   currentIndex = firstResult.index;
@@ -337,7 +337,7 @@ export const integer = (): Parser<number> =>
       many1(digit())
     ),
     ([sign, digits]) => {
-      const num = parseInt(digits.join(''), 10);
+      const num = Number.parseInt(digits.join(''), 10);
       return sign === '-' ? -num : num;
     }
   );
