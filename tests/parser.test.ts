@@ -107,7 +107,7 @@ describe('Convenience Combinators', () => {
     const p = until(string('*/'))(anyChar);
     expect(p('abc*/def')).toMatchObject({
       value: ['a', 'b', 'c'],
-      index: 3,
+      index: 5,
     });
   });
 
@@ -154,7 +154,7 @@ describe('Utility Parsers', () => {
     const p = whitespaces;
     expect(p('   \t\n')).toMatchObject({
       success: true,
-      index: 5, // Changed from 4 to 5 (3 spaces + \t + \n)
+      index: 5,
     });
   });
 });

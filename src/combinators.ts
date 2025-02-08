@@ -76,12 +76,12 @@ export const alt =
  * abParser('abc', 0) // => { success: true, value: ['a', 'b'], index: 2 }
  */
 export const seq = <T extends unknown[]>(
-  ...parsers: { [K in keyof T]: Parser<T[K]> }
+  ...parsers: Parser<T[number]>[]
 ): Parser<T> => (input: string, index = 0) => {
   const values = [] as unknown as T;
   let currentIndex = index;
 
-  for (const parser of parsers as Parser<T[number]>[]) {
+  for (const parser of parsers) {
     const result = parser(input, currentIndex);
     if (!result.success) return result as ParseResult<T>;
     values.push(result.value);
@@ -105,7 +105,7 @@ export const map =
   ): Parser<U> =>
   (input: string, index = 0) => {
     const result = parser(input, index);
-    if (!result.success) return result;
+    if (!result.success) return result as ParseResult<U>;
     if (validate && !validate(result.value)) {
       return {
         success: false,
@@ -222,7 +222,7 @@ export const not =
     return result.success
       ? {
           success: false,
-          expected: [`not ${result.expected.join(' or ')}`], // Join array to string
+          expected: [`not ${result.expected.join(' or ')}`],
           index,
         }
       : { success: true, value: null, index };
@@ -239,7 +239,7 @@ export const except =
     if (excludeResult.success) {
       return {
         success: false,
-        expected: [`not ${excludeResult.expected.join(' or ')}`], // Join array
+        expected: [`not ${excludeResult.expected.join(' or ')}`],
         index,
       };
     }
@@ -282,7 +282,7 @@ export const whitespaces: Parser<void> = map(
  */
 export const letter = (): Parser<string> =>
   map(
-    anyChar,
+    anyChar as Parser<string>,
     (c: string) => {
       if (/^[a-zA-Z]$/.test(c)) return c;
       throw new Error('Not a letter');
