@@ -443,58 +443,121 @@ export const sepBy =
 export const token = <T>(parser: Parser<T>): Parser<T> =>
   map(seq(parser, whitespaces()), ([value]) => value);
 
-type AndThenChain<T, R extends Parser<unknown>[]> = R extends []
-  ? []
-  : R extends [
-        (value: T) => Parser<infer U>,
-        ...infer Rest extends ((value: unknown) => Parser<unknown>)[],
-      ]
-    ? [(value: T) => Parser<U>, ...AndThenChain<U, Rest>]
-    : never;
 
-export function andThen<T0, R extends Parser<unknown>[]>(
-  parser: Parser<T0>,
-  ...fns: AndThenChain<T0, R>
-): Parser<
-  R extends [] ? T0 : R extends [(value: T0) => Parser<infer U>] ? U : unknown
->;
-export function andThen(
-  parser: Parser<unknown>,
-  ...fns: ((value: unknown) => Parser<unknown>)[]
-) {
-  return fns.reduce((currentParser, fn) => {
-    return (input: string, index: number) => {
-      const result = currentParser(input, index);
-      if (!result.success) return result;
-      const nextParser = fn(result.value);
-      return nextParser(input, result.index);
-    };
+type Chain<T, U> = (value: T) => Parser<U>;
+
+/**
+ * Chains parsers sequentially, passing values through transformations.
+ * @example
+ * const parser = andThen(
+ *   integer(),
+ *   n => string(n.toString())
+ * );
+ */
+export function andThen<First>(
+  parser: Parser<First>
+): Parser<First>;
+export function andThen<First, Last>(
+  parser: Parser<First>,
+  fn: Chain<First, Last>
+): Parser<Last>;
+export function andThen<First, Second, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Fifth, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Fifth>,
+  fn5: Chain<Fifth, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Fifth>,
+  fn5: Chain<Fifth, Sixth>,
+  fn6: Chain<Sixth, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Fifth>,
+  fn5: Chain<Fifth, Sixth>,
+  fn6: Chain<Sixth, Seventh>,
+  fn7: Chain<Seventh, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Fifth>,
+  fn5: Chain<Fifth, Sixth>,
+  fn6: Chain<Sixth, Seventh>,
+  fn7: Chain<Seventh, Eighth>,
+  fn8: Chain<Eighth, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Ninth, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Fifth>,
+  fn5: Chain<Fifth, Sixth>,
+  fn6: Chain<Sixth, Seventh>,
+  fn7: Chain<Seventh, Eighth>,
+  fn8: Chain<Eighth, Ninth>,
+  fn9: Chain<Ninth, Last>
+): Parser<Last>;
+export function andThen<First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Ninth, Tenth, Last>(
+  parser: Parser<First>,
+  fn1: Chain<First, Second>,
+  fn2: Chain<Second, Third>,
+  fn3: Chain<Third, Fourth>,
+  fn4: Chain<Fourth, Fifth>,
+  fn5: Chain<Fifth, Sixth>,
+  fn6: Chain<Sixth, Seventh>,
+  fn7: Chain<Seventh, Eighth>,
+  fn8: Chain<Eighth, Ninth>,
+  fn9: Chain<Ninth, Tenth>,
+  fn10: Chain<Tenth, Last>
+): Parser<Last>;
+export function andThen<T>(
+  parser: Parser<T>,
+  ...fns: Chain<unknown, T>[]
+): Parser<T> {
+  return fns.reduce((p, fn) => (input: string, index = 0) => {
+    const result = p(input, index);
+    if (!result.success) return result;
+    return fn(result.value)(input, result.index);
   }, parser);
 }
 
 /**
- * Provides fallback error messages
+ * Lookahead parser that succeeds/fails without consuming input.
  * @example
- * recoverWith(char('a'), ['letter a'])('b') // => expects 'letter a'
- */
-export const recoverWith =
-  <T>(parser: Parser<T>, expected: string[]): Parser<T> =>
-  (input, index = 0) => {
-    const result = parser(input, index);
-    return result.success
-      ? result
-      : {
-          success: false,
-          expected,
-          index: result.index,
-        };
-  };
-
-/**
- * Parses without consuming input (zero-width assertion)
- * @example
- * peek(string('http'))('https') // success
- * peek(string('http'))('https') // success
+ * const p = peek(string('http'))
+ * p('https') // success without consuming 'http'
  */
 export const peek =
   <T>(parser: Parser<T>): Parser<T> =>

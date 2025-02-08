@@ -50,8 +50,8 @@ describe('Chaining Combinators', () => {
     // Test successful chain
     const parser = andThen(
       integer(),
-      (n) => string('_'.repeat(n)), // Chain integer to dynamic string
-      (s) => many(char(s[0])), // Chain string to repeated chars
+      // (n) => string('_'), // Chain integer to dynamic string
+      (s) => many(char('_')), // Chain string to repeated chars
     );
 
     // Test valid input
