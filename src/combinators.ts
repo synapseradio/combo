@@ -7,7 +7,7 @@ import type { Parser } from './-types';
  */
 export const char =
   (c: string): Parser<string> =>
-  (input, index = 0) =>
+  (input: string, index = 0) =>
     input[index] === c
       ? { success: true, value: c, index: index + 1 }
       : { success: false, expected: [`'${c}'`], index };
@@ -20,7 +20,7 @@ export const char =
  */
 export const string =
   (s: string): Parser<string> =>
-  (input, index = 0) =>
+  (input: string, index = 0) =>
     input.startsWith(s, index)
       ? { success: true, value: s, index: index + s.length }
       : { success: false, expected: [`'${s}'`], index };
@@ -33,7 +33,7 @@ export const string =
  */
 export const succeed =
   <T>(value: T): Parser<T> =>
-  (_, index = 0) => ({ success: true, value, index });
+  (_: string, index = 0) => ({ success: true, value, index });
 
 /**
  * Always fails with specified expectation. Used for expected error reporting.
@@ -43,7 +43,7 @@ export const succeed =
  */
 export const fail =
   <T>(expected: string): Parser<T> =>
-  (_, index = 0) => ({ success: false, expected: [expected], index });
+  (_: string, index = 0) => ({ success: false, expected: [expected], index });
 
 /**
  * Tries multiple parsers in order, returning first success. Enables alternative patterns.
@@ -53,7 +53,7 @@ export const fail =
  */
 export const alt =
   <T>(...parsers: Parser<T>[]): Parser<T> =>
-  (input, index = 0) => {
+  (input: string, index = 0) => {
     const errors: string[] = [];
 
     for (const parser of parsers) {
@@ -75,23 +75,21 @@ export const alt =
  * const abParser = seq(char('a'), char('b'));
  * abParser('abc', 0) // => { success: true, value: ['a', 'b'], index: 2 }
  */
-export const seq =
-  <T extends unknown[]>(
-    ...parsers: { [K in keyof T]: Parser<T[K]> }
-  ): Parser<T> =>
-  (input, index = 0) => {
-    const values: { [K in keyof T]: T[K] } = [] as { [K in keyof T]: T[K] };
-    let currentIndex = index;
+export const seq = <T extends unknown[]>(
+  ...parsers: { [K in keyof T]: Parser<T[K]> }
+): Parser<T> => (input: string, index = 0) => {
+  const values = [] as unknown as T;
+  let currentIndex = index;
 
-    for (const parser of parsers) {
-      const result = parser(input, currentIndex);
-      if (!result.success) return { ...result, index };
-      values.push(result.value);
-      currentIndex = result.index;
-    }
+  for (const parser of parsers as Parser<T[number]>[]) {
+    const result = parser(input, currentIndex);
+    if (!result.success) return result as ParseResult<T>;
+    values.push(result.value);
+    currentIndex = result.index;
+  }
 
-    return { success: true, value: values as T, index: currentIndex };
-  };
+  return { success: true, value: values, index: currentIndex };
+};
 
 /**
  * Transforms parser result using a mapping function. Enables data normalization.
@@ -105,7 +103,7 @@ export const map =
     fn: (value: T) => U,
     validate?: (value: T) => boolean,
   ): Parser<U> =>
-  (input, index = 0) => {
+  (input: string, index = 0) => {
     const result = parser(input, index);
     if (!result.success) return result;
     if (validate && !validate(result.value)) {
@@ -129,7 +127,7 @@ export const map =
  */
 export const many =
   <T>(parser: Parser<T>): Parser<T[]> =>
-  (input, index = 0) => {
+  (input: string, index = 0) => {
     const values: T[] = [];
     let currentIndex = index;
 
@@ -161,7 +159,10 @@ export const optional = <T>(parser: Parser<T>): Parser<T | undefined> =>
 export const between =
   (left: Parser<unknown>, right: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
-    map(seq(left, parser, right), ([, value]) => value);
+    map(
+      seq(left, parser, right) as Parser<[unknown, T, unknown]>,
+      ([, value]) => value
+    );
 
 /**
  * Parses content after a prefix, ignoring the prefix
@@ -171,7 +172,10 @@ export const between =
 export const after =
   (prefix: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
-    map(seq(prefix, parser), ([, value]) => value);
+    map(
+      seq(prefix, parser) as Parser<[unknown, T]>,
+      ([, value]) => value
+    );
 
 /**
  * Parses content until a stop condition is met
@@ -213,7 +217,7 @@ export const until =
  */
 export const not =
   (parser: Parser<unknown>): Parser<null> =>
-  (input, index = 0) => {
+  (input: string, index = 0) => {
     const result = parser(input, index);
     return result.success
       ? {
@@ -230,7 +234,7 @@ export const not =
 export const except =
   (exclusion: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
-  (input, index = 0) => {
+  (input: string, index = 0) => {
     const excludeResult = exclusion(input, index);
     if (excludeResult.success) {
       return {
@@ -245,7 +249,7 @@ export const except =
 /**
  * Matches any single character (fails at EOF)
  */
-export const anyChar: Parser<string> = (input, index = 0) =>
+export const anyChar: Parser<string> = (input: string, index = 0) =>
   index < input.length
     ? { success: true, value: input[index], index: index + 1 }
     : { success: false, expected: ['any character'], index };
@@ -255,7 +259,7 @@ export const anyChar: Parser<string> = (input, index = 0) =>
  */
 export const whitespace =
   (): Parser<string> =>
-  (input, index = 0) => {
+  (input: string, index = 0) => {
     const char = input[index];
     if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
       return { success: true, value: char, index: index + 1 };
@@ -279,11 +283,11 @@ export const whitespaces: Parser<void> = map(
 export const letter = (): Parser<string> =>
   map(
     anyChar,
-    (c) => {
+    (c: string) => {
       if (/^[a-zA-Z]$/.test(c)) return c;
       throw new Error('Not a letter');
     },
-    (c) => /^[a-zA-Z]$/.test(c),
+    (c: string) => /^[a-zA-Z]$/.test(c)
   );
 
 // Intuitive aliases
