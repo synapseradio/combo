@@ -7,7 +7,10 @@ export const memoize = <T>(parser: Parser<T>): Parser<T> => {
     if (!memo.has(parser)) {
       memo.set(parser, new Map());
     }
-    const cache = memo.get(parser)!;
+    const cache = memo.get(parser);
+    if (!cache) {
+      throw new Error('Cache not found despite being set');
+    }
 
     const cached = cache.get(index);
     if (cached) return cached as ParseResult<T>;
@@ -105,7 +108,7 @@ export const seq =
     const values = [] as unknown as T;
     let currentIndex = index;
 
-    for (const parser of (parsers as Parser<T[number]>[])) {
+    for (const parser of parsers as Parser<T[number]>[]) {
       const result = parser(input, currentIndex);
       if (!result.success) return result as ParseResult<T>;
       values.push(result.value as T[number]);
@@ -355,11 +358,12 @@ export const letter = (): Parser<string> =>
 export const digit = (): Parser<string> =>
   map(
     anyChar,
-    (c: string) => { // Explicit type
+    (c: string) => {
+      // Explicit type
       if (/\d/.test(c)) return c;
       throw new Error('Not a digit');
     },
-    (c: string) => /\d/.test(c) // Explicit type
+    (c: string) => /\d/.test(c), // Explicit type
   );
 
 /**
