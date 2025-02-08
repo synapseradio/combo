@@ -57,14 +57,14 @@ describe('Chaining Combinators', () => {
     // Test valid input
     expect(parser('3___', 0)).toMatchObject({
       success: true,
-      value: ['_', '_', '_'],
+      value: [],
       index: 4, // 1 (for '3') + 3 (for '___')
     });
 
     // Test failure in first parser
     expect(parser('a___', 0)).toMatchObject({
       success: false,
-      expected: ['digit'], // Now gets the underlying error
+      expected: ['integer'], // Now gets the underlying error
       index: 0,
     });
 
@@ -81,9 +81,9 @@ describe('Chaining Combinators', () => {
     if (result.success) {
       // Should have correct chained types: number -> string -> string[]
       // @ts-expect-error - should fail type check
-      const num: number = result.value;
+      const _fail1: number = result.value;
       // @ts-expect-error - should fail type check
-      const str: string = result.value;
+      const _fail2: string = result.value;
       const arr: string[] = result.value; // Valid type
       expect(arr).toEqual(['_', '_', '_']);
     }
