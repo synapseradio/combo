@@ -50,8 +50,8 @@ describe('Chaining Combinators', () => {
     // Test successful chain
     const parser = andThen(
       integer(),
-      // (n) => string('_'), // Chain integer to dynamic string
-      (s) => many(char('_')), // Chain string to repeated chars
+      (n) => string('_'.repeat(n)), // Actually use the integer to determine underscore count
+      (s) => many(char(s[0])), // Now s is the underscore string from previous step
     );
 
     // Test valid input
