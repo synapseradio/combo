@@ -1,13 +1,17 @@
 import type { ParseResult, Parser } from './-types';
 
-const memo = new WeakMap<Parser<any>, Map<number, ParseResult<any>>>();
+const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
 
 export const memoize = <T>(parser: Parser<T>): Parser<T> => {
   return (input: string, index = 0) => {
     if (!memo.has(parser)) {
       memo.set(parser, new Map());
     }
-    const cache = memo.get(parser)!;
+    const cache = memo.get(parser);
+    if (!cache) {
+      // This should not happen, but handle it just in case
+      return parser(input, index);
+    }
 
     const cached = cache.get(index);
     if (cached) return cached as ParseResult<T>;
