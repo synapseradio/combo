@@ -1,19 +1,22 @@
 import type { ParseResult, Parser } from './-types';
 
-const memo = new WeakMap<Parser<unknown>, Map<number, ParseResult<unknown>>>();
+const memo = new WeakMap<Parser<any>, Map<number, ParseResult<any>>>();
 
-
-export const memoize =
-  <T>(parser: Parser<T>): Parser<T> =>
-  (input: string, index = 0) => {
-    if (!memo.has(parser)) memo.set(parser, new Map());
+export const memoize = <T>(parser: Parser<T>): Parser<T> => {
+  return (input: string, index = 0) => {
+    if (!memo.has(parser)) {
+      memo.set(parser, new Map());
+    }
     const cache = memo.get(parser)!;
 
-    return (
-      cache.get(index) ??
-      (cache.set(index, parser(input, index)), cache.get(index)!)
-    );
+    const cached = cache.get(index);
+    if (cached) return cached as ParseResult<T>;
+
+    const result = parser(input, index);
+    cache.set(index, result);
+    return result;
   };
+};
 
 /**
  * Matches a single specific character. Basic building block for token recognition.
