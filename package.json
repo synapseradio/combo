@@ -22,7 +22,7 @@
     "lint:fix": "biome check --write",
     "dev": "rslib build --watch",
     "types:check": "tsc --noEmit",
-    "test:changed": "git diff --name-only main... | grep -E 'src/.*\\.ts$|tests/.*\\.test\\.ts$' | sed -e 's|src/\\(.*\\)\\.ts$|tests/\\1.test.ts|' -e 't' -e 'd' | xargs bun test"
+    "test:changed": "git diff --name-only master | xargs bun test"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
