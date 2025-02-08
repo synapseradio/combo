@@ -22,6 +22,7 @@
     "lint:fix": "biome check --write",
     "dev": "rslib build --watch",
     "types:check": "tsc --noEmit",
+    "test": "bun test",
     "test:changed": "git diff --name-only master | xargs bun test"
   },
   "devDependencies": {
