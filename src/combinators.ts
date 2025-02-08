@@ -1,4 +1,4 @@
-import type { Parser } from './-types';
+import type { Parser, ParseResult } from './-types';
 
 /**
  * Matches a single specific character. Basic building block for token recognition.
