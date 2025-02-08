@@ -229,7 +229,7 @@ export const optional = <T>(parser: Parser<T>): Parser<T | undefined> =>
 export const between =
   (left: Parser<unknown>, right: Parser<unknown>) =>
   <T>(parser: Parser<T>): Parser<T> =>
-    map(seq(left, parser, right), (result: [unknown, T, unknown]) => result[1]);
+    map(seq(left, parser, right), (result) => result[1]);
 
 /**
  * Parses content after a prefix, ignoring the prefix
@@ -389,7 +389,7 @@ export const letter = (): Parser<string> =>
       if (/^[a-zA-Z]$/.test(c)) return c;
       throw new Error('Not a letter');
     },
-    (c: string) => /^[a-zA-Z]$/.test(c),
+    (c) => /^[a-zA-Z]$/.test(c),
   );
 
 /**
@@ -419,8 +419,7 @@ export const integer = (): Parser<number> =>
     ([sign, digits]) => {
       const num = Number.parseInt(digits.join(''), 10);
       return sign === '-' ? -num : num;
-    },
-    ([, digits]) => digits.length > 0,
+    }
   );
 
 /**
