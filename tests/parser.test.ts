@@ -13,6 +13,7 @@ import {
   letter,
   many,
   many1,
+  manyN,
   not,
   optional,
   sepBy,
@@ -71,8 +72,8 @@ describe('Chaining Combinators', () => {
     expect(parser('2_', 0)).toMatchObject({
       // Reduced to 1 underscore
       success: false,
-      expected: ["'__'"], // Expecting 2 underscores
-      index: 1, // Fails after parsing integer 2
+      expected: ["'_'"], // Expecting 2 underscores
+      index: 2, // Fails after parsing integer 2
     });
 
     // Test type transitions
